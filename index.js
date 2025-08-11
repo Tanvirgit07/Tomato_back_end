@@ -1,0 +1,34 @@
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const connectBD = require("./configs/db");
+const foodRouter = require("./routers/foodRouter/foodRouter");
+
+const PORT = 5000;
+
+const app = express();
+
+//middleware
+app.use(express.json());
+app.use(cors());
+
+//connect router
+app.use("/api/v1/food", foodRouter);
+
+// connect DB
+connectBD();
+
+app.listen(PORT, () => {
+  console.log(`Server is running port ${PORT}`);
+});
+
+// global error handler
+app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
+  const message = err.message || "Internal Server Error !";
+  res.status(statusCode).json({
+    success: false,
+    statusCode,
+    message,
+  });
+});
