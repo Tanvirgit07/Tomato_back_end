@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const connectBD = require("./configs/db");
 const foodRouter = require("./routers/foodRouter/foodRouter");
-
+const userRouter = require("./routers/userRouter/userRouter");
 const PORT = 5000;
 
 const app = express();
@@ -14,6 +14,7 @@ app.use(cors());
 
 //connect router
 app.use("/api/v1/food", foodRouter);
+app.use("/api/v1/user",userRouter);
 
 // connect DB
 connectBD();
