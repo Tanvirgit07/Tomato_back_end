@@ -144,6 +144,8 @@ const forgotPassword = async (req, res, next) => {
     user.resetOtpExpire = Date.now() + 5 * 60 * 1000; // 5 min
     await user.save();
 
+    console.log(user);
+
     await sendMail({
       to: email,
       subject: "Your OTP Code",
@@ -174,4 +176,102 @@ const forgotPassword = async (req, res, next) => {
   }
 };
 
-module.exports = { createUser, signIn, forgotPassword };
+const varifyOtp = async (req, res, next) => {
+  const { email, otp } = req.body;
+  try {
+    if (!email || !otp) {
+      res.status(400).json({
+        success: false,
+        message: "All filds are required !",
+      });
+    }
+
+    const user = await UserModel.findOne({ email: email });
+    if (!user) {
+      res.json(400).json({
+        success: false,
+        message: "User not found !",
+      });
+    }
+
+    const isMatch = await bcrypt.compare(otp, user.resetOtpHash);
+    console.log(isMatch);
+    if (!user.resetOtpHash || !isMatch) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid OTP!",
+      });
+    }
+
+    if (user.resetOtpExpire < Date.now()) {
+      res.status(400).json({
+        success: false,
+        message: "OTP expired !",
+      });
+    }
+
+    (user.resetOtpExpire = undefined), (user.resetOtpHash = undefined);
+
+    const resetToken = jwt.sign({id: user._id, role: user.role}, process.env.JWT_SECRET,{expiresIn: '5m'});
+
+    res.status(200).json({
+      success: true,
+      message: "OTP verified successfully !",
+      resetToken: resetToken
+    });
+  } catch (err) {
+    next(handleError(500, err.message));
+  }
+};
+
+const resetPassword = async (req, res, next) => {
+  const { email, newPasswrd, resetToken} = req.body;
+  console.log(email,newPasswrd,resetToken)
+  try {
+    if (!email || !newPasswrd || !resetToken) {
+    throw  res.status(400).json({
+        success: false,
+        message: "Email / newPasswerd are requeire !",
+      });
+    }
+
+
+    if(!resetToken){
+      res.status(400).json({
+        success: false,
+        message: "You must provided Token !"
+      })
+    }
+
+    const user = await UserModel.findOne({ email: email });
+
+    if (!user) {
+      res.status(400).json({
+        success: false,
+        message: "User not found !",
+      });
+    }
+
+    const hashPassword = await bcrypt.hash(newPasswrd, 10);
+
+    user.password = hashPassword;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password reset Successfully !",
+    });
+  } catch (err) {
+    console.log(err)
+    next(handleError(500, err.message));
+  }
+};
+
+module.exports = {
+  createUser,
+  signIn,
+  forgotPassword,
+  varifyOtp,
+  resetPassword,
+};
