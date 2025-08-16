@@ -13,6 +13,6 @@ categoryRouter.post("/addcategory", upload.single("image"), addCategory);
 categoryRouter.post("/editcategory/:id",upload.single("image"), editCategory);
 categoryRouter.get("/allcategory", getAllCategory);
 categoryRouter.get("/singlecategory/:id", getCategoryById);
-categoryRouter.post("/deletecategory", deleteCategory);
+categoryRouter.delete("/deletecategory/:id", deleteCategory);
 
 module.exports = categoryRouter;

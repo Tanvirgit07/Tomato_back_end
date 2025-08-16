@@ -212,12 +212,16 @@ const varifyOtp = async (req, res, next) => {
 
     (user.resetOtpExpire = undefined), (user.resetOtpHash = undefined);
 
-    const resetToken = jwt.sign({id: user._id, role: user.role}, process.env.JWT_SECRET,{expiresIn: '5m'});
+    const resetToken = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "5m" }
+    );
 
     res.status(200).json({
       success: true,
       message: "OTP verified successfully !",
-      resetToken: resetToken
+      resetToken: resetToken,
     });
   } catch (err) {
     next(handleError(500, err.message));
@@ -225,48 +229,61 @@ const varifyOtp = async (req, res, next) => {
 };
 
 const resetPassword = async (req, res, next) => {
-  const { email, newPasswrd, resetToken} = req.body;
-  console.log(email,newPasswrd,resetToken)
   try {
-    if (!email || !newPasswrd || !resetToken) {
-    throw  res.status(400).json({
+    const { email, newPassword, resetToken } = req.body;
+
+    if (!email || !newPassword || !resetToken) {
+      return res.status(400).json({
         success: false,
-        message: "Email / newPasswerd are requeire !",
+        message: "All fields are required!",
       });
     }
 
-
-    if(!resetToken){
-      res.status(400).json({
+    let decoded;
+    try {
+      decoded = jwt.verify(resetToken, process.env.JWT_SECRET);
+    } catch (err) {
+      return res.status(400).json({
         success: false,
-        message: "You must provided Token !"
-      })
+        message: "Invalid or expired reset token!",
+      });
     }
 
-    const user = await UserModel.findOne({ email: email });
+    if (!decoded?.id) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid token payload!",
+      });
+    }
 
+    const user = await UserModel.findById(decoded.id);
     if (!user) {
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
-        message: "User not found !",
+        message: "User not found!",
       });
     }
 
-    const hashPassword = await bcrypt.hash(newPasswrd, 10);
+    if (user.email !== email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email mismatch!",
+      });
+    }
 
+    const hashPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashPassword;
-
     await user.save();
 
     res.status(200).json({
       success: true,
-      message: "Password reset Successfully !",
+      message: "Password reset successfully!",
     });
   } catch (err) {
-    console.log(err)
     next(handleError(500, err.message));
   }
 };
+
 
 module.exports = {
   createUser,
