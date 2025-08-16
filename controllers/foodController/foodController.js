@@ -5,6 +5,7 @@ const fs = require("fs");
 
 const addFood = async (req, res, next) => {
   try {
+    
     const uploadResult = await cloudinary.uploader.upload(req.file.path);
 
     const newFood = new FoodModel({
