@@ -10,9 +10,9 @@ const upload = require("../../multer/singleFileUploade/singleFileUpload");
 const categoryRouter = express.Router();
 
 categoryRouter.post("/addcategory", upload.single("image"), addCategory);
-categoryRouter.post("/editcagetory", editCategory);
-categoryRouter.post("/allcategory", getAllCategory);
-categoryRouter.post("/singlecategory", getCategoryById);
+categoryRouter.post("/editcategory/:id",upload.single("image"), editCategory);
+categoryRouter.get("/allcategory", getAllCategory);
+categoryRouter.get("/singlecategory/:id", getCategoryById);
 categoryRouter.post("/deletecategory", deleteCategory);
 
 module.exports = categoryRouter;

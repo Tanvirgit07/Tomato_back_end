@@ -13,6 +13,9 @@ const categorySchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  publicId: {
+    type: String,
+  }
 });
 
 const categoryModel = mongoose.model("category", categorySchema);
