@@ -1,14 +1,12 @@
 const cloudinary = require("../../cloudinary/cloudinaryConfig");
 const handleError = require("../../helper/handelError/handleError");
 const categoryModel = require("../../models/categoryModel/categoryModel");
+const SubCategoryModel = require("../../models/subCategorymodel/subCategoryModel");
 
 const addCategory = async (req, res, next) => {
   try {
     const { categoryName, categorydescription } = req.body;
     const image = req.file;
-
-
-    // console.log(image)
     if (!categoryName || !categorydescription || !image) {
       return res.status(400).json({
         success: false,
@@ -85,7 +83,7 @@ const editCategory = async (req, res, next) => {
 
 const getAllCategory = async (req, res, next) => {
   try {
-    const categories = await categoryModel.find().populate('subCategory');
+    const categories = await categoryModel.find().populate("subCategory");
     return res.status(200).json({
       success: true,
       count: categories.length,
@@ -99,7 +97,9 @@ const getAllCategory = async (req, res, next) => {
 const getCategoryById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const singlecategory = await categoryModel.findById(id).populate('subCategory')
+    const singlecategory = await categoryModel
+      .findById(id)
+      .populate("subCategory");
     res.status(200).json({
       success: true,
       message: "",
@@ -113,14 +113,28 @@ const getCategoryById = async (req, res, next) => {
 const deleteCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const deleteCategory = await categoryModel.findByIdAndDelete(id);
+    const category = await categoryModel.findById(id);
+    if (!category) {
+      return res.status(400).json({
+        success: true,
+        message: "Category Not Found",
+      });
+    }
+
+    await Promise.all(
+      category.subCategory.map(async (subId) => {
+        await SubCategoryModel.findByIdAndDelete(subId);
+      })
+    );
+
+    await categoryModel.findByIdAndDelete(id);
+
     res.status(200).json({
       success: true,
-      message: "Category Delete Successfully !",
-      data: deleteCategory,
+      message: "Category and its subcategories deleted successfully!",
     });
   } catch (err) {
-    res.status(500, err.message);
+    next(handleError(500, err.message))
   }
 };
 

@@ -122,16 +122,57 @@ const getAllSubCategory = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "All Sub-Category fatch Successfully !",
-      data: allSubCategory
-    })
+      data: allSubCategory,
+    });
   } catch (err) {}
 };
-const getSingleSubCategory = (req, res, next) => {
-  const {} = req.body;
+const getSingleSubCategory = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const getSingleSubCategory = await SubCategoryModel.findById(id).populate(
+      "category"
+    );
+    res.status(200).json({
+      success: true,
+      message: "Success fatch single sub-categoy!",
+      data: getSingleSubCategory,
+    });
+  } catch (err) {
+    next(handleError(500, err.message));
+  }
 };
 
-const deleteSubCategory = (req, res, next) => {
-  const {} = req.body;
+const deleteSubCategory = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const data = await SubCategoryModel.findById(id);
+    if (!data) {
+      return res.status(400).json({
+        success: false,
+        message: "Sub-Category Not Found",
+      });
+    }
+
+    const RSuFC = await categoryModel.findById(data.category);
+    if (!RSuFC) {
+      return res.status(400).json({
+        success: true,
+        message: "Missing Category !",
+      });
+    }
+
+    RSuFC.subCategory = RSuFC.subCategory.filter((ESuC) => ESuC.toString() !== data._id.toString());
+    await RSuFC.save();
+
+    const deleteSubCategory = await SubCategoryModel.findByIdAndDelete(id);
+    res.status(200).json({
+      success: true,
+      message: "Sub-Category Delete Successfully",
+      data: deleteSubCategory,
+    });
+  } catch (err) {
+    next(handleError(500, err.message));
+  }
 };
 
 module.exports = {
