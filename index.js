@@ -5,6 +5,7 @@ const connectBD = require("./configs/db");
 const foodRouter = require("./routers/foodRouter/foodRouter");
 const userRouter = require("./routers/userRouter/userRouter");
 const categoryRouter = require("./routers/categoryRouter/categoryRouter");
+const subCategoryRouter = require("./routers/subCategoryRouter/subCategoryRouter");
 const PORT = 5000;
 
 const app = express();
@@ -17,6 +18,8 @@ app.use(cors());
 app.use("/api/v1/food", foodRouter);
 app.use("/api/v1/user",userRouter);
 app.use("/api/v1/category",categoryRouter)
+app.use("/api/v1/subcategory",subCategoryRouter)
+
 
 // connect DB
 connectBD();

@@ -4,6 +4,8 @@ const categorySchema = new mongoose.Schema({
   categoryName: {
     type: String,
     required: true,
+    unique: true,
+    trim: true,
   },
   categorydescription: {
     type: String,
@@ -15,8 +17,14 @@ const categorySchema = new mongoose.Schema({
   },
   publicId: {
     type: String,
-  }
-});
+  },
+  subCategory: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref:"subcategory"
+    }
+  ]
+},{timestamps: true});
 
 const categoryModel = mongoose.model("category", categorySchema);
 module.exports = categoryModel;

@@ -7,17 +7,12 @@ const addCategory = async (req, res, next) => {
     const { categoryName, categorydescription } = req.body;
     const image = req.file;
 
+
+    // console.log(image)
     if (!categoryName || !categorydescription || !image) {
       return res.status(400).json({
         success: false,
         message: "All fild are required !",
-      });
-    }
-
-    if (!image) {
-      return res.status(400).json({
-        success: true,
-        message: "Image also required !",
       });
     }
 
@@ -90,7 +85,7 @@ const editCategory = async (req, res, next) => {
 
 const getAllCategory = async (req, res, next) => {
   try {
-    const categories = await categoryModel.find();
+    const categories = await categoryModel.find().populate('subCategory');
     return res.status(200).json({
       success: true,
       count: categories.length,
@@ -104,7 +99,7 @@ const getAllCategory = async (req, res, next) => {
 const getCategoryById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const singlecategory = await categoryModel.findById(id);
+    const singlecategory = await categoryModel.findById(id).populate('subCategory')
     res.status(200).json({
       success: true,
       message: "",
