@@ -4,7 +4,7 @@ const {addFood, updateFood, getAllFood, singleFood, deleteFood} = require('../..
 const foodRouter = express.Router();
 
 
-foodRouter.post("/createFood",upload.single("imageUrl"),addFood);
+foodRouter.post("/createFood",upload.single("image"),addFood);
 foodRouter.put("/updateFood/:id",upload.single("imageUrl"),updateFood);
 foodRouter.get("/getAllFood",getAllFood);
 foodRouter.get('/getSingleFood/:id',singleFood);

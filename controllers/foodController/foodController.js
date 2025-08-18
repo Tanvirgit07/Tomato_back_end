@@ -5,27 +5,43 @@ const fs = require("fs");
 
 const addFood = async (req, res, next) => {
   try {
-    
-    const uploadResult = await cloudinary.uploader.upload(req.file.path);
+    const { name, description, price, category, discountPrice } = req.body;
+    if (!name || !description || !price || !category || !discountPrice) {
+      return res.status(400).json({
+        success: true,
+        message: "All fields are required",
+      });
+    }
+
+    console.log(req.file);
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Image is requried",
+      });
+    }
+
+    const result = await cloudinary.uploader.upload(req.file.path);
 
     const newFood = new FoodModel({
-      name: req.body.name,
-      description: req.body.description,
-      price: req.body.price,
-      imageUrl: uploadResult.secure_url,
-      category: req.body.category,
+      name: name,
+      description: description,
+      price: price,
+      image: result.secure_url,
+      publicId: result.public_id,
+      category: category,
+      discountPrice: discountPrice,
     });
-
     await newFood.save();
-    fs.unlinkSync(req.file.path);
 
     res.status(200).json({
-      status: true,
-      message: "Food create successfully !",
-      newFood,
+      success: true,
+      message: "Food Create Successfully",
+      data: newFood,
     });
   } catch (err) {
-    next(handleError(500, err.message));
+    next(handleError(500, err.next));
   }
 };
 
@@ -112,5 +128,5 @@ module.exports = {
   updateFood,
   getAllFood,
   singleFood,
-  deleteFood
+  deleteFood,
 };
