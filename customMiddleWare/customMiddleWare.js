@@ -11,7 +11,7 @@ const isLogin = async (req, res, next) => {
         message: "No token, authorization denied",
       });
     }
-    const decoded = jwt.verify(token, process.env.JWT_SECRE);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await UserModel.findById(decoded.id);
     if (!user) {
       return res.status(401).json({
@@ -34,7 +34,7 @@ const isAdmin = async (req, res, next) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRE);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await UserModel.findById(decoded.id);
 
     if (!user) {
@@ -65,7 +65,7 @@ const isSeller = async (req, res, next) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRE);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await UserModel.findById(decoded.id);
 
     if (!user) {
