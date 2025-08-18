@@ -5,16 +5,16 @@ const fs = require("fs");
 
 const addFood = async (req, res, next) => {
   try {
+   
     const { name, description, price, category, discountPrice } = req.body;
+    // console.log(req.file, name,description,price,category,discountPrice);
     if (!name || !description || !price || !category || !discountPrice) {
       return res.status(400).json({
-        success: true,
+        success: false,
         message: "All fields are required",
       });
     }
-
-    console.log(req.file);
-
+    
     if (!req.file) {
       return res.status(400).json({
         success: false,
