@@ -29,6 +29,7 @@ const createComment = async (req, res, next) => {
     }
 
     existingFood.comments.push(sevComment._id);
+    await existingFood.save()
 
     const existingUser = await UserModel.findOne({ _id: userId });
     if (!existingUser) {
@@ -39,6 +40,7 @@ const createComment = async (req, res, next) => {
     }
 
     existingUser.comments.push(sevComment._id);
+    await existingUser.save()
 
     res.status(200).json({
       success: true,
@@ -51,6 +53,7 @@ const createComment = async (req, res, next) => {
 const editComment = async (req, res, next) => {
   try {
     const { id } = req.params;
+    const {productId,userId,commentText} = req.body;
     console.log(productId, userId, commentText, id);
 
     if (!id || !productId || !userId) {
@@ -169,7 +172,7 @@ const deleteComment = async (req, res, next) => {
     }
 
     existingCommentUser.comments = existingCommentUser.comments.filter(
-      (UCID) => UCID !== existingComment._id
+      (UCID) => UCID.toString() !== existingComment._id.toString()
     );
     await existingCommentUser.save();
 
@@ -184,14 +187,16 @@ const deleteComment = async (req, res, next) => {
     }
 
     existingCommentFood.comments = existingCommentFood.comments.filter(
-      (FCID) => FCID !== existingComment._id
+      (FCID) => FCID.toString() !== existingComment._id.toString()
     );
     await existingCommentFood.save();
+
+    const deleteExistingComment = await CommentModel.findByIdAndDelete(id)
 
     res.status(200).json({
       success: true,
       message: "Comment delete successfully",
-      data: existingComment,
+      data: deleteExistingComment,
     });
   } catch (err) {
     next(handleError(500, err.message));
