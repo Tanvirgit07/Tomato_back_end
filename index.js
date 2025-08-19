@@ -8,6 +8,7 @@ const categoryRouter = require("./routers/categoryRouter/categoryRouter");
 const subCategoryRouter = require("./routers/subCategoryRouter/subCategoryRouter");
 const reviewRouter = require("./routers/reviewRouter/reviewRouter");
 const commentRouter = require("./routers/commentRouter/commentRouter");
+const replyRouter = require("./routers/replyRouter/replyRouter");
 const PORT = 5000;
 
 const app = express();
@@ -23,6 +24,8 @@ app.use("/api/v1/category", categoryRouter);
 app.use("/api/v1/subcategory", subCategoryRouter);
 app.use("/api/v1/review", reviewRouter);
 app.use("/api/v1/comment", commentRouter);
+app.use("/api/v1/reply", replyRouter);
+
 
 // connect DB
 connectBD();
