@@ -41,9 +41,8 @@ const useSchema = new mongoose.Schema(
     resetOtpExpire: {
       type: String,
     },
-    reviews: [
-      {type: mongoose.Schema.Types.ObjectId, ref: "review"}
-    ]
+    reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: "review" }],
+    comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "comment" }],
   },
   { timestamps: true }
 );

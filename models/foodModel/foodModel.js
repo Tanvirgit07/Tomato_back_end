@@ -19,7 +19,7 @@ const foodSchema = new mongoose.Schema(
       required: true,
     },
     publicId: {
-      type : String,
+      type: String,
     },
     category: {
       type: String,
@@ -30,6 +30,7 @@ const foodSchema = new mongoose.Schema(
       required: true,
     },
     reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: "review" }],
+    comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "comment" }],
   },
   { timestamps: true }
 );
