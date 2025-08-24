@@ -5,7 +5,7 @@ const subCategoryRouter = express.Router();
 
 
 subCategoryRouter.post("/addsubcategory", upload.single('image'), addSubCategory);
-subCategoryRouter.post("/editsubcategory/:id",upload.single("image"), editSubCategory);
+subCategoryRouter.put("/editsubcategory/:id",upload.single("image"), editSubCategory);
 subCategoryRouter.get("/getallsubcategory", getAllSubCategory);
 subCategoryRouter.get("/getsinglesubcategory/:id", getSingleSubCategory);
 subCategoryRouter.delete("/deleteSubCategory/:id", deleteSubCategory);

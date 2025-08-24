@@ -53,7 +53,7 @@ const editSubCategory = async (req, res, next) => {
     const image = req.file;
     const { id } = req.params;
 
-    // console.log(name,category,image,id);
+    console.log(name,category,image,id);
     if (!id) {
       return res.status(400).json({
         success: false,
