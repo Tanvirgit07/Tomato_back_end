@@ -17,7 +17,7 @@ foodRouter.put(
   upload.single("imageUrl"),
   updateFood
 );
-foodRouter.get("/getAllFood", isLogin, getAllFood);
+foodRouter.get("/getAllFood", getAllFood);
 foodRouter.get("/getSingleFood/:id", isLogin, singleFood);
 foodRouter.get("/deleteFood/:id", isLogin, deleteFood);
 
