@@ -52,6 +52,7 @@ const editSubCategory = async (req, res, next) => {
     const { name, category, description } = req.body;
     const { id } = req.params;
 
+  // console.log(name,category,image,id);
     if (!id) {
       return res.status(400).json({
         success: false,
