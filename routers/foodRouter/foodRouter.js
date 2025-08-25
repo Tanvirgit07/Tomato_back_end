@@ -10,7 +10,7 @@ const {
 const { isLogin } = require("../../customMiddleWare/customMiddleWare");
 const foodRouter = express.Router();
 
-foodRouter.post("/createFood", isLogin, upload.single("image"), addFood);
+foodRouter.post("/createFood",upload.single("image"), addFood);
 foodRouter.put(
   "/updateFood/:id",
   isLogin,
