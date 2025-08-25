@@ -50,72 +50,72 @@ const addSubCategory = async (req, res, next) => {
 const editSubCategory = async (req, res, next) => {
   try {
     const { name, category, description } = req.body;
-    const image = req.file;
     const { id } = req.params;
 
-    // console.log(name,category,image,id);
     if (!id) {
       return res.status(400).json({
         success: false,
-        message: "All fild are required !",
+        message: "Subcategory ID is required!",
       });
     }
 
     const subCategory = await SubCategoryModel.findById(id);
     if (!subCategory) {
-      return res.status(400).json({
+      return res.status(404).json({
         success: false,
-        message: "Sub-Category not found !",
+        message: "Subcategory not found!",
       });
     }
 
-    if (subCategory.publicId) {
-      await cloudinary.uploader.destroy(subCategory.publicId);
-    }
-    const result = await cloudinary.uploader.upload(image.path);
-    subCategory.image = result.secure_url;
-    subCategory.publicId = result.public_id;
-
-    if (name) {
-      subCategory.name = name;
-    }
-    if (description) {
-      subCategory.description = description;
+    // ✅ Only upload new image if provided
+    if (req.file) {
+      if (subCategory.publicId) {
+        await cloudinary.uploader.destroy(subCategory.publicId);
+      }
+      const result = await cloudinary.uploader.upload(req.file.path);
+      subCategory.image = result.secure_url;
+      subCategory.publicId = result.public_id;
     }
 
+    // ✅ Update fields if provided
+    if (name) subCategory.name = name;
+    if (description) subCategory.description = description;
+
+    // ✅ Handle category reassignment
     if (category && category.toString() !== subCategory.category.toString()) {
       const oldCategory = await categoryModel.findById(subCategory.category);
       if (oldCategory) {
         oldCategory.subCategory = oldCategory.subCategory.filter(
-          (scId) => scId !== subCategory._id
+          (scId) => scId.toString() !== subCategory._id.toString()
         );
+        await oldCategory.save();
       }
-      await oldCategory.save();
+
+      const newCategory = await categoryModel.findById(category);
+      if (!newCategory) {
+        return res.status(404).json({
+          success: false,
+          message: "Selected category not found!",
+        });
+      }
+      newCategory.subCategory.push(subCategory._id);
+      await newCategory.save();
+
+      subCategory.category = category;
     }
 
-    const newCategory = await categoryModel.findById(category);
-    if (!newCategory) {
-      return res.status(400).json({
-        success: false,
-        message: "Selected Category Not Found !",
-      });
-    }
-
-    newCategory.subCategory.push(subCategory._id);
-    await newCategory.save();
-
-    subCategory.category = category;
     await subCategory.save();
 
     res.status(200).json({
       success: true,
-      message: "Sub-Categoey Update Successfully !",
+      message: "Subcategory updated successfully!",
       data: subCategory,
     });
   } catch (err) {
     next(handleError(500, err.message));
   }
 };
+
 const getAllSubCategory = async (req, res, next) => {
   try {
     const allSubCategory = await SubCategoryModel.find().populate("category");
