@@ -2,35 +2,35 @@ const mongoose = require("mongoose");
 
 const foodSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: true,
-    },
-    description: {
-      type: String,
-      required: true,
-    },
-    price: {
-      type: Number,
-      required: true,
-    },
-    image: {
-      type: String,
-      required: true,
-    },
-    publicId: {
-      type: String,
-    },
+    name: { type: String, required: true },
+    description: { type: String, required: true },
+    price: { type: Number, required: true },
+    discountPrice: { type: Number, default: 0 },
+    image: { type: String, required: true },
+    publicId: { type: String },
+
+    // সম্পর্কিত Category
     category: {
-      type: String,
-      required: true,
+      _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Category",
+        required: true,
+      },
+      name: { type: String, required: true },
     },
-    discountPrice: {
-      type: Number,
-      required: true,
+
+    // সম্পর্কিত SubCategory
+    subCategory: {
+      _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "SubCategory",
+        required: true,
+      },
+      name: { type: String, required: true },
     },
-    reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: "review" }],
-    comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "comment" }],
+
+    reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: "Review" }],
+    comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }],
   },
   { timestamps: true }
 );

@@ -87,7 +87,7 @@ const getAllCategory = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       count: categories.length,
-      categories,
+      data:categories,
     });
   } catch (err) {
     next(handleError(500, err.message));

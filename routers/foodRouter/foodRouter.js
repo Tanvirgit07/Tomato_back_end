@@ -10,7 +10,7 @@ const {
 const { isLogin } = require("../../customMiddleWare/customMiddleWare");
 const foodRouter = express.Router();
 
-foodRouter.post("/createFood",upload.single("image"), addFood);
+foodRouter.post("/createfood",upload.single("image"), addFood);
 foodRouter.put(
   "/updateFood/:id",
   isLogin,
@@ -18,7 +18,7 @@ foodRouter.put(
   updateFood
 );
 foodRouter.get("/getAllFood", getAllFood);
-foodRouter.get("/getSingleFood/:id", isLogin, singleFood);
-foodRouter.get("/deleteFood/:id", isLogin, deleteFood);
+foodRouter.get("/getSingleFood/:id", singleFood);
+foodRouter.get("/deleteFood/:id", deleteFood);
 
 module.exports = foodRouter;

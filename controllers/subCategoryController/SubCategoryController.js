@@ -6,8 +6,9 @@ const SubCategoryModel = require("../../models/subCategorymodel/subCategoryModel
 const addSubCategory = async (req, res, next) => {
   try {
     const { name, description, category } = req.body;
+    
     const image = req.file;
-
+console.log(name,description,category,image)
     if (!name || !description || !category || !image) {
       return res.status(400).json({
         success: false,
@@ -28,6 +29,7 @@ const addSubCategory = async (req, res, next) => {
     const sevCategory = await subcategory.save();
 
     const mainCategory = await categoryModel.findById(category);
+    console.log(mainCategory)
 
     if (!mainCategory) {
       return res.status(400).json({
