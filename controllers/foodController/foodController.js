@@ -89,6 +89,7 @@ const addFood = async (req, res, next) => {
 };
 
 const updateFood = async (req, res, next) => {
+  // console.log(req.body)
   try {
     const { id } = req.params;
     const {
@@ -99,8 +100,7 @@ const updateFood = async (req, res, next) => {
       subCategoryId,
       discountPrice,
     } = req.body;
-
-    // 🟢 Existing food check
+    // 🟢 Check if food exists
     const existingFood = await FoodModel.findById(id);
     if (!existingFood) {
       return next(handleError(404, "Food Not Found!"));
@@ -109,7 +109,7 @@ const updateFood = async (req, res, next) => {
     // 🟢 Category check
     let category = existingFood.category;
     if (categoryId) {
-      const foundCategory = await CategoryModel.findById(categoryId);
+      const foundCategory = await categoryModel.findById(categoryId);
       if (!foundCategory) {
         return res.status(404).json({
           success: false,
@@ -138,7 +138,7 @@ const updateFood = async (req, res, next) => {
       };
     }
 
-    // 🟢 Image upload
+    // 🟢 Image upload (optional)
     let imageUrl = existingFood.image;
     let publicId = existingFood.publicId;
     if (req.file) {
@@ -152,13 +152,10 @@ const updateFood = async (req, res, next) => {
     const updatedFood = await FoodModel.findByIdAndUpdate(
       id,
       {
-        name: name || existingFood.name,
-        description: description || existingFood.description,
-        price: price || existingFood.price,
-        discountPrice:
-          discountPrice !== undefined
-            ? discountPrice
-            : existingFood.discountPrice,
+        name: name !== undefined ? name : existingFood.name,
+        description: description !== undefined ? description : existingFood.description,
+        price: price !== undefined ? Number(price) : existingFood.price,
+        discountPrice: discountPrice !== undefined ? Number(discountPrice) : existingFood.discountPrice,
         image: imageUrl,
         publicId: publicId,
         category,
@@ -220,7 +217,7 @@ const singleFood = async (req, res, next) => {
 const deleteFood = async (req, res, next) => {
   try {
     const { id } = req.params;
-
+console.log(id)
     // Validate ObjectId
     if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
       return next(handleError(400, "Invalid food ID!"));
