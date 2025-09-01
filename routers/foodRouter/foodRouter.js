@@ -7,18 +7,16 @@ const {
   singleFood,
   deleteFood,
 } = require("../../controllers/foodController/foodController");
-const { isLogin } = require("../../customMiddleWare/customMiddleWare");
 const foodRouter = express.Router();
 
 foodRouter.post("/createfood",upload.single("image"), addFood);
 foodRouter.put(
-  "/updateFood/:id",
-  isLogin,
-  upload.single("imageUrl"),
+  "/updatefood/:id",
+  upload.single("image"),
   updateFood
 );
 foodRouter.get("/getAllFood", getAllFood);
 foodRouter.get("/getSingleFood/:id", singleFood);
-foodRouter.get("/deleteFood/:id", deleteFood);
+foodRouter.delete("/deleteFood/:id", deleteFood);
 
 module.exports = foodRouter;

@@ -6,9 +6,9 @@ const SubCategoryModel = require("../../models/subCategorymodel/subCategoryModel
 const addSubCategory = async (req, res, next) => {
   try {
     const { name, description, category } = req.body;
-    
+
     const image = req.file;
-console.log(name,description,category,image)
+    console.log(name, description, category, image);
     if (!name || !description || !category || !image) {
       return res.status(400).json({
         success: false,
@@ -29,7 +29,7 @@ console.log(name,description,category,image)
     const sevCategory = await subcategory.save();
 
     const mainCategory = await categoryModel.findById(category);
-    console.log(mainCategory)
+    console.log(mainCategory);
 
     if (!mainCategory) {
       return res.status(400).json({
@@ -54,7 +54,7 @@ const editSubCategory = async (req, res, next) => {
     const { name, category, description } = req.body;
     const { id } = req.params;
 
-  // console.log(name,category,image,id);
+    // console.log(name,category,image,id);
     if (!id) {
       return res.status(400).json({
         success: false,
@@ -164,7 +164,9 @@ const deleteSubCategory = async (req, res, next) => {
       });
     }
 
-    RSuFC.subCategory = RSuFC.subCategory.filter((ESuC) => ESuC.toString() !== data._id.toString());
+    RSuFC.subCategory = RSuFC.subCategory.filter(
+      (ESuC) => ESuC.toString() !== data._id.toString()
+    );
     await RSuFC.save();
 
     const deleteSubCategory = await SubCategoryModel.findByIdAndDelete(id);
