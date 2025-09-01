@@ -153,9 +153,13 @@ const updateFood = async (req, res, next) => {
       id,
       {
         name: name !== undefined ? name : existingFood.name,
-        description: description !== undefined ? description : existingFood.description,
+        description:
+          description !== undefined ? description : existingFood.description,
         price: price !== undefined ? Number(price) : existingFood.price,
-        discountPrice: discountPrice !== undefined ? Number(discountPrice) : existingFood.discountPrice,
+        discountPrice:
+          discountPrice !== undefined
+            ? Number(discountPrice)
+            : existingFood.discountPrice,
         image: imageUrl,
         publicId: publicId,
         category,
@@ -177,7 +181,17 @@ const updateFood = async (req, res, next) => {
 
 const getAllFood = async (req, res, next) => {
   try {
-    const allFood = await FoodModel.find();
+    const {name, category} = req.query;
+    const filter = {};
+    if (name && name.trim()) {
+      filter.name = { $regex: name, $options: "i" };
+    }
+
+    if(category && category.trim()){
+      filter["category.name"] = {$regex: category, $options: "i" }
+    }
+
+    const allFood = await FoodModel.find(filter);
 
     res.status(200).json({
       success: true,
@@ -217,7 +231,7 @@ const singleFood = async (req, res, next) => {
 const deleteFood = async (req, res, next) => {
   try {
     const { id } = req.params;
-console.log(id)
+    console.log(id);
     // Validate ObjectId
     if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
       return next(handleError(400, "Invalid food ID!"));
