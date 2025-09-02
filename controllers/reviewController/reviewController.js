@@ -96,7 +96,7 @@ const editReview = async (req, res, next) => {
 
 const getAllReviews = async (req, res, next) => {
   try {
-    const allReviews = await ReviewModel.find();
+    const allReviews = await ReviewModel.find().populate("user").populate("food");
     res.status(200).json({
       success: true,
       message: "Fetch all reviews",
@@ -108,6 +108,21 @@ const getAllReviews = async (req, res, next) => {
 };
 
 const getSingleReview = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    console.log(id)
+    const singleReview = await ReviewModel.findById(id);
+    res.status(200).json({
+      success: true,
+      message: "Fetch Single Review",
+      data: singleReview,
+    });
+  } catch (err) {
+    next(handleError(500, err.message));
+  }
+};
+
+const getReviewByuser = async (req, res, next) => {
   try {
     const { id } = req.params;
     console.log(id)

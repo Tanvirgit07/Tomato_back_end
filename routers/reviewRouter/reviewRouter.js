@@ -6,13 +6,12 @@ const {
   getSingleReview,
   reviewDelete,
 } = require("../../controllers/reviewController/reviewController");
-const { isLogin } = require("../../customMiddleWare/customMiddleWare");
 const reviewRouter = express.Router();
 
-reviewRouter.post("/createreview", isLogin, createReview);
-reviewRouter.post("/editreview/:id", isLogin, editReview);
+reviewRouter.post("/createreview", createReview);
+reviewRouter.post("/editreview/:id", editReview);
 reviewRouter.get("/allreviews", getAllReviews);
-reviewRouter.get("/getsinglereview/:id", isLogin, getSingleReview);
+reviewRouter.get("/getsinglereview/:id", getSingleReview);
 reviewRouter.delete("/reviewdelete/:id", reviewDelete)
 
 module.exports = reviewRouter;
