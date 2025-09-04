@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const handleError = require("../../helper/handelError/handleError");
 const FoodModel = require("../../models/foodModel/foodModel");
 const ReviewModel = require("../../models/review/reviewsModel");
@@ -67,7 +68,6 @@ const editReview = async (req, res, next) => {
     const { comment, rating } = req.body;
     const { id } = req.params;
     const existingReview = await ReviewModel.findById(id);
-    console.log(existingReview)
     if (!existingReview) {
       return res.status(400).json({
         success: false,
@@ -96,7 +96,10 @@ const editReview = async (req, res, next) => {
 
 const getAllReviews = async (req, res, next) => {
   try {
-    const allReviews = await ReviewModel.find().populate("user").populate("food");
+    const allReviews = await ReviewModel.find()
+      .populate("user")
+      .populate("food");
+
     res.status(200).json({
       success: true,
       message: "Fetch all reviews",
@@ -110,12 +113,39 @@ const getAllReviews = async (req, res, next) => {
 const getSingleReview = async (req, res, next) => {
   try {
     const { id } = req.params;
-    console.log(id)
-    const singleReview = await ReviewModel.findById(id);
+    const singleReview = await ReviewModel.find({ food: id });
+
+    const stats = await ReviewModel.aggregate([
+      { $match: { food: new mongoose.Types.ObjectId(id) } },
+      {
+        $group: {
+          _id: "$rating",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    let summery = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    let totalReviews = 0;
+    let totalReating = 0;
+
+    stats.forEach((item) => {
+      summery[item._id] = item.count;
+      totalReviews = totalReviews + item.count;
+      totalReating = totalReating + item._id * item.count;
+    });
+
+    const avgRating = (totalReating / totalReviews).toFixed(2);
     res.status(200).json({
       success: true,
       message: "Fetch Single Review",
       data: singleReview,
+      reviewSummmery: {
+        summery,
+        totalReating,
+        totalReviews,
+        avgRating,
+      },
     });
   } catch (err) {
     next(handleError(500, err.message));
@@ -125,7 +155,7 @@ const getSingleReview = async (req, res, next) => {
 const getReviewByuser = async (req, res, next) => {
   try {
     const { id } = req.params;
-    console.log(id)
+    console.log(id);
     const singleReview = await ReviewModel.findById(id);
     res.status(200).json({
       success: true,
@@ -189,4 +219,10 @@ const reviewDelete = async (req, res, next) => {
   }
 };
 
-module.exports = { createReview, editReview, getAllReviews, getSingleReview,reviewDelete};
+module.exports = {
+  createReview,
+  editReview,
+  getAllReviews,
+  getSingleReview,
+  reviewDelete,
+};

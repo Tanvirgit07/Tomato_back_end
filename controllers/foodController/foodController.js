@@ -106,7 +106,6 @@ const updateFood = async (req, res, next) => {
       fs.unlinkSync(req.file.path);
     }
 
-    // 🟢 Handle subImages upload (optional)
     let subImages = existingFood.subImages || [];
     if (req.files && req.files["subImages"]) {
       const uploadedSubImages = await Promise.all(
@@ -119,7 +118,6 @@ const updateFood = async (req, res, next) => {
       subImages = uploadedSubImages;
     }
 
-    // 🟢 Update Food
     const updatedFood = await FoodModel.findByIdAndUpdate(
       id,
       {
@@ -162,7 +160,7 @@ const getAllFood = async (req, res, next) => {
       filter["category.name"] = {$regex: category, $options: "i" }
     }
 
-    const allFood = await FoodModel.find(filter);
+    const allFood = await FoodModel.find(filter)
 
     res.status(200).json({
       success: true,

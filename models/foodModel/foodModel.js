@@ -33,8 +33,8 @@ const foodSchema = new mongoose.Schema(
       name: { type: String, required: true },
     },
 
-    reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: "Review" }],
-    comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }],
+    // reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: "review" }],
+    // comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }],
   },
   { timestamps: true }
 );
