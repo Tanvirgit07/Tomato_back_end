@@ -9,7 +9,8 @@ const {
 } = require("../../controllers/foodController/foodController");
 const foodRouter = express.Router();
 
-foodRouter.post("/createfood",upload.single("image"), addFood);
+// foodRouter.post("/createfood",upload.single("image"), addFood);
+foodRouter.post("/careatefood", upload.fields([{name: "image", maxCount: 1}, {name: "subImages", maxCount: 5}]), addFood)
 foodRouter.put(
   "/updatefood/:id",
   upload.single("image"),

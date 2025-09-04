@@ -7,9 +7,14 @@ const foodSchema = new mongoose.Schema(
     price: { type: Number, required: true },
     discountPrice: { type: Number, default: 0 },
     image: { type: String, required: true },
+     subImages: [
+      {
+        url: { type: String, required: true },
+        publicId: { type: String },
+      },
+    ],
     publicId: { type: String },
 
-    // সম্পর্কিত Category
     category: {
       _id: {
         type: mongoose.Schema.Types.ObjectId,
@@ -19,7 +24,6 @@ const foodSchema = new mongoose.Schema(
       name: { type: String, required: true },
     },
 
-    // সম্পর্কিত SubCategory
     subCategory: {
       _id: {
         type: mongoose.Schema.Types.ObjectId,
