@@ -55,6 +55,47 @@ const addToCart = async (req, res, next) => {
   }
 };
 
+
+const updateCartQuantity = async (req, res, next) => {
+  try {
+    const { userId, productId } = req.params;
+    const { action } = req.body; // "increment" | "decrement"
+
+    let cartItem = await CartModal.findOne({ userId, productId });
+    if (!cartItem) {
+      return res.status(404).json({ message: "Cart item not found" });
+    }
+
+    const product = await FoodModel.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    if (action === "increment") {
+      if (cartItem.quantity >= product.stock) {
+        return res.status(400).json({ message: "Reached stock limit" });
+      }
+      cartItem.quantity += 1;
+    } else if (action === "decrement") {
+      cartItem.quantity -= 1;
+      if (cartItem.quantity <= 0) {
+        await CartModal.findByIdAndDelete(cartItem._id);
+        return res.json({ success: true, message: "Item removed from cart" });
+      }
+    }
+
+    await cartItem.save();
+
+    return res.json({
+      success: true,
+      message: "Quantity updated",
+      cartItem,
+    });
+  } catch (err) {
+    next(handleError(500, err.message))
+  }
+};
+
 const getCartByuserId = async (req, res, next) => {
   try {
     const { userId } = req.params;
@@ -70,4 +111,41 @@ const getCartByuserId = async (req, res, next) => {
     next(handleError(500, err.message));
   }
 };
-module.exports = { addToCart, getCartByuserId };
+
+// Delete cart item
+const deleteCartItem = async (req, res, next) => {
+  try {
+    const { userId, productId } = req.params;
+
+    if (!userId || !productId) {
+      return res.status(400).json({
+        success: false,
+        message: "userId and productId are required",
+      });
+    }
+
+    // Find and delete the cart item
+    const deletedItem = await CartModal.findOneAndDelete({
+      userId,
+      productId,
+    });
+
+    if (!deletedItem) {
+      return res.status(404).json({
+        success: false,
+        message: "Cart item not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Cart item deleted successfully",
+      data: deletedItem,
+    });
+  } catch (error) {
+    next(handleError(500, error.message))
+  }
+};
+
+
+module.exports = { addToCart, getCartByuserId, updateCartQuantity, deleteCartItem };

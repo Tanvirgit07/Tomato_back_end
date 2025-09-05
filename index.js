@@ -10,6 +10,7 @@ const reviewRouter = require("./routers/reviewRouter/reviewRouter");
 const commentRouter = require("./routers/commentRouter/commentRouter");
 const replyRouter = require("./routers/replyRouter/replyRouter");
 const cartRouter = require("./routers/cartRoute/cartRoute");
+const wishListRouter = require("./routers/wishlistRouter/wishlistRouter");
 const PORT = 5000;
 
 const app = express();
@@ -32,6 +33,7 @@ app.use("/api/v1/review", reviewRouter);
 app.use("/api/v1/comment", commentRouter);
 app.use("/api/v1/reply", replyRouter);
 app.use("/api/v1/cart", cartRouter);
+app.use("/api/v1/wishlist", wishListRouter)
 
 
 // connect DB
