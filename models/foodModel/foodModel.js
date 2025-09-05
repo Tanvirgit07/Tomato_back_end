@@ -7,7 +7,8 @@ const foodSchema = new mongoose.Schema(
     price: { type: Number, required: true },
     discountPrice: { type: Number, default: 0 },
     image: { type: String, required: true },
-     subImages: [
+    stock: { type: Number, default: 0 },
+    subImages: [
       {
         url: { type: String, required: true },
         publicId: { type: String },

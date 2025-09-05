@@ -7,7 +7,7 @@ const FoodModel = require("../../models/foodModel/foodModel");
 
 const addFood = async (req, res, next) => {
   try {
-    const { name, description, price, categoryId, subCategoryId, discountPrice } = req.body;
+    const { name, description, price, categoryId, subCategoryId, discountPrice, stock } = req.body;
 
     if (!name || !description || !price || !categoryId || !subCategoryId || !discountPrice) {
       return res.status(400).json({ success: false, message: "All fields are required" });
@@ -40,6 +40,7 @@ const addFood = async (req, res, next) => {
       description,
       price,
       discountPrice,
+      stock,
       image: mainImageResult.secure_url,
       publicId: mainImageResult.public_id,
       subImages,
@@ -59,7 +60,7 @@ const addFood = async (req, res, next) => {
 const updateFood = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, description, price, discountPrice, categoryId, subCategoryId } =
+    const { name, description, price, discountPrice, categoryId, subCategoryId, stock } =
       req.body;
 
     // 🟢 Check if food exists
@@ -124,6 +125,7 @@ const updateFood = async (req, res, next) => {
         name: name ?? existingFood.name,
         description: description ?? existingFood.description,
         price: price !== undefined ? Number(price) : existingFood.price,
+        stock: stock !== undefined ? Number(stock) : existingFood.stock,
         discountPrice:
           discountPrice !== undefined
             ? Number(discountPrice)
