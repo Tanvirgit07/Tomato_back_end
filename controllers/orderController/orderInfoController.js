@@ -1,6 +1,5 @@
 const stripe = require("stripe")(process.env.STRIP_SECRET_KEY);
 
-// ✅ Checkout Session Details Retrieve Controller
 const getCheckoutSession = async (req, res) => {
   try {
     const { id } = req.params;

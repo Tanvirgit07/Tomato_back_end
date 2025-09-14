@@ -24,7 +24,7 @@ const addToWishlist = async (req, res) => {
   }
 };
 
-// ✅ Get wishlist by userId
+
 const getWishlistByUser = async (req, res, next) => {
   try {
     const { userId } = req.params;
@@ -40,12 +40,15 @@ const getWishlistByUser = async (req, res, next) => {
   }
 };
 
-// ✅ Remove product from wishlist
+
+
 const removeFromWishlist = async (req, res, next) => {
+  console.log("ame ni")
   try {
     const { userId, productId } = req.params;
+    console.log(userId, productId)
 
-    await Wishlist.findOneAndDelete({ userId, productId });
+    await WishlistModal.findOneAndDelete({ userId, productId });
 
     res.status(200).json({
       message: "Product removed from wishlist",

@@ -3,71 +3,48 @@ const sendMail = require("../../helper/mailSend/mailSend");
 const UserModel = require("../../models/user/userModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const fs = require("fs");
+const cloudinary = require("../../cloudinary/cloudinaryConfig");
 
 const createUser = async (req, res, next) => {
   try {
-    const {
-      name,
-      email,
-      password,
-      confirmPassword,
-      phoneNumber,
-      termsAndCondition,
-    } = req.body;
-    if (
-      !name ||
-      !email ||
-      !password ||
-      !confirmPassword ||
-      !phoneNumber ||
-      !termsAndCondition
-    ) {
-      res.status(400).json({
-        success: false,
-        message: "All fields are required",
-      });
+    const { name, email, password, confirmPassword, phoneNumber, termsAndCondition } = req.body;
+
+    if (!name || !email || !password || !confirmPassword || !phoneNumber || termsAndCondition === undefined) {
+      return res.status(400).json({ success: false, message: "All fields are required" });
     }
 
     if (!termsAndCondition) {
-      res.status(400).json({
-        success: false,
-        message: "You must accept the terms and conditions",
-      });
+      return res.status(400).json({ success: false, message: "You must accept the terms and conditions" });
     }
 
     if (password !== confirmPassword) {
-      res.status(400).json({
-        success: false,
-        message: "Password do not match !",
-      });
+      return res.status(400).json({ success: false, message: "Passwords do not match!" });
     }
 
     const existingUser = await UserModel.findOne({
-      $or: [{ email: email }, { phonNumber: phoneNumber }],
+      $or: [{ email }, { phoneNumber }],
     });
 
     if (existingUser) {
-      res.status(409).json({
-        success: false,
-        message: "User already registered !",
-      });
+      return res.status(409).json({ success: false, message: "User already registered!" });
     }
 
     const hashPassword = await bcrypt.hash(password, 10);
 
     const newUser = await UserModel.create({
-      name: name,
-      email: email,
+      name,
+      email,
       password: hashPassword,
-      phonNumber: phoneNumber,
-      termsAndCondition: termsAndCondition,
+      phoneNumber,
+      termsAndCondition,
     });
 
     await newUser.save();
 
-    res.status(200).json({
+    res.status(201).json({
       success: true,
-      message: "User create successfully !",
+      message: "User created successfully!",
       newUser,
     });
   } catch (err) {
@@ -284,6 +261,101 @@ const resetPassword = async (req, res, next) => {
   }
 };
 
+const updateUser = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const { name, email, phoneNumber, bio, profileImage, address } = req.body;
+
+    const updateData = {
+      name,
+      email,
+      phoneNumber,
+      bio,
+      address: {
+        street: address?.street || "",
+        city: address?.city || "",
+        country: address?.country || "",
+        zip: address?.zip || "",
+      },
+    };
+
+    if (req.file) {
+      try {
+        const uploadResult = await cloudinary.uploader.upload(req.file.path);
+
+        updateData.profileImage = uploadResult.secure_url;
+        fs.unlinkSync(req.file.path);
+      } catch (uploadErr) {
+        return next(
+          handleError(500, "Image upload failed: " + uploadErr.message)
+        );
+      }
+    } else if (profileImage) {
+      // যদি frontend থেকে url পাঠানো হয়
+      updateData.profileImage = profileImage;
+    }
+
+    // 🟢 DB তে update
+    const updatedUser = await UserModel.findByIdAndUpdate(userId, updateData, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "User updated successfully",
+      user: updatedUser,
+    });
+  } catch (err) {
+    next(handleError(500, err.message));
+  }
+};
+
+const getSingleUser = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await UserModel.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "User fetched successfully",
+      user,
+    });
+  } catch (error) {
+    next(handleError(500, err.message));
+  }
+};
+
+const changePassword = async (req, res, next) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const userId = req.user.id;
+
+    const user = await UserModel.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch)
+      return res.status(400).json({ message: "Old password is incorrect" });
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    user.password = hashedPassword;
+
+    await user.save();
+
+    res.json({ message: "Password changed successfully" });
+  } catch (err) {
+    next(handleError(500, err.message));
+  }
+};
 
 module.exports = {
   createUser,
@@ -291,4 +363,7 @@ module.exports = {
   forgotPassword,
   varifyOtp,
   resetPassword,
+  updateUser,
+  getSingleUser,
+  changePassword,
 };
