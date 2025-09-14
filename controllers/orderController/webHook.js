@@ -1,3 +1,4 @@
+const CartModal = require("../../models/cartModel/cartModel");
 const OrderModel = require("../../models/payment/paymentModel");
 
 const stripe = require("stripe")(process.env.STRIP_SECRET_KEY);
@@ -21,6 +22,7 @@ const stripeWebhook = async (req, res) => {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
 
+      // Find the order in DB
       const order = await OrderModel.findOne({
         checkoutSessionId: session.id,
       });
@@ -30,6 +32,17 @@ const stripeWebhook = async (req, res) => {
         order.paymentIntentId = session.payment_intent;
         await order.save();
         console.log("✅ Payment success for session:", session.id);
+
+        // Remove purchased products from Cart
+        const userId = order.userId;
+        const productIds = order.products.map(p => p.productId);
+
+        await CartModal.deleteMany({
+          userId,
+          productId: { $in: productIds },
+        });
+
+        console.log("✅ Cart updated for user:", userId);
       } else {
         console.log("❌ Order not found for session:", session.id);
       }
