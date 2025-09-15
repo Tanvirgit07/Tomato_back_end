@@ -4,6 +4,7 @@ const OrderModel = require("../../models/payment/paymentModel");
 const stripe = require("stripe")(process.env.STRIP_SECRET_KEY);
 
 const stripeWebhook = async (req, res) => {
+  console.log("ame ni")
   const sig = req.headers["stripe-signature"];
   let event;
 

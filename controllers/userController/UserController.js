@@ -40,7 +40,7 @@ const createUser = async (req, res, next) => {
       termsAndCondition,
     });
 
-    await newUser.save();
+    // await newUser.save();
 
     res.status(201).json({
       success: true,
