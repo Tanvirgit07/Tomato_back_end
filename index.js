@@ -13,6 +13,7 @@ const cartRouter = require("./routers/cartRoute/cartRoute");
 const wishListRouter = require("./routers/wishlistRouter/wishlistRouter");
 const paymentRouter = require("./routers/paymentRouter/paymentRouter");
 const webHookRouter = require("./routers/webHookRouter/webHookRouter");
+const bestProductRouter = require("./controllers/bestSellController/bestSellRouter");
 const PORT = 5000;
 
 const app = express();
@@ -40,6 +41,7 @@ app.use("/api/v1/reply", replyRouter);
 app.use("/api/v1/cart", cartRouter);
 app.use("/api/v1/wishlist", wishListRouter)
 app.use("/api/v1/payment",paymentRouter)
+app.use('/api/v1/bestsell',bestProductRouter)
 
 
 // connect DB

@@ -1,5 +1,7 @@
 const CartModal = require("../../models/cartModel/cartModel");
 const OrderModel = require("../../models/payment/paymentModel");
+const FoodModel = require("../../models/foodModel/foodModel");
+
 
 const stripe = require("stripe")(process.env.STRIP_SECRET_KEY);
 
@@ -33,6 +35,14 @@ const stripeWebhook = async (req, res) => {
         order.paymentIntentId = session.payment_intent;
         await order.save();
         console.log("✅ Payment success for session:", session.id);
+
+
+        await Promise.all(
+          order.products.map((p) =>
+            FoodModel.findByIdAndUpdate(p.productId, { $inc: { sales: 1 } })
+          )
+        );
+        console.log("✅ Sales updated for all products in the order");
 
         // Remove purchased products from Cart
         const userId = order.userId;

@@ -24,6 +24,7 @@ const foodSchema = new mongoose.Schema(
       },
       name: { type: String, required: true },
     },
+    sales: { type: Number, default: 0 },
 
     subCategory: {
       _id: {

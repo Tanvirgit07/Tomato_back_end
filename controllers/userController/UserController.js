@@ -107,6 +107,7 @@ const signIn = async (req, res, next) => {
 const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
+    
     const user = await UserModel.findOne({ email: email });
     if (!user) {
       res.status(400).json({
@@ -120,8 +121,6 @@ const forgotPassword = async (req, res, next) => {
     user.resetOtpHash = hashOtp;
     user.resetOtpExpire = Date.now() + 5 * 60 * 1000; // 5 min
     await user.save();
-
-    console.log(user);
 
     await sendMail({
       to: email,
