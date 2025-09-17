@@ -1,7 +1,8 @@
 const express = require("express");
-const { bestSellingProduct } = require("./bestSellController");
+const { bestSellingProduct, getNewArrivals } = require("./bestSellController");
 const bestProductRouter = express.Router();
 
 bestProductRouter.get("/bestsellproduct",bestSellingProduct);
+bestProductRouter.get("/newarrivalproduct",getNewArrivals)
 
 module.exports = bestProductRouter;

@@ -22,5 +22,24 @@ const bestSellingProduct = async (req,res,next) => {
 
 }
 
+const getNewArrivals = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    const foods = await FoodModel.find()
+      .sort({ createdAt: -1 })
+      .limit(limit);
 
-module.exports = {bestSellingProduct}
+    res.status(200).json({
+      success: true,
+      count: foods.length,
+      data: foods,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+module.exports = {bestSellingProduct,getNewArrivals}
