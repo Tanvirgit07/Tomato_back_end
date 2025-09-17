@@ -13,6 +13,7 @@ const isLogin = async (req, res, next) => {
     }
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await UserModel.findById(decoded.id);
+    console.log(user)
     if (!user) {
       return res.status(401).json({
         message: "User not found",
