@@ -8,6 +8,8 @@ const offerSchema = new mongoose.Schema(
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
     isActive: { type: Boolean, default: true },
+    image: { type: String },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "users" }, // <-- add this
   },
   { timestamps: true }
 );

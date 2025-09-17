@@ -11,18 +11,27 @@ const isLogin = async (req, res, next) => {
         message: "No token, authorization denied",
       });
     }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await UserModel.findById(decoded.id);
-    console.log(user)
+
     if (!user) {
       return res.status(401).json({
         message: "User not found",
       });
     }
 
+    // এখানে ইউজার সেট করতে হবে
+    req.user = user;
+
     next();
   } catch (err) {
-    next(handleError(500, err.message));
+    console.error("Login middleware error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error in authentication",
+      error: err.message,
+    });
   }
 };
 
