@@ -9,7 +9,15 @@ const offerSchema = new mongoose.Schema(
     endDate: { type: Date, required: true },
     isActive: { type: Boolean, default: true },
     image: { type: String },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "users" }, // <-- add this
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "users" },
+
+    // ✅ Keep track of which products this offer belongs to
+    products: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "food", 
+      },
+    ],
   },
   { timestamps: true }
 );

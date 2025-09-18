@@ -11,7 +11,7 @@ const createReview = async (req, res, next) => {
     if (!user || !food || !rating || !comment) {
       return res.status(400).json({
         success: false,
-        message: "All fild are required ",
+        message: "All fields are required",
       });
     }
 
@@ -19,49 +19,48 @@ const createReview = async (req, res, next) => {
     if (existingReview) {
       return res.status(400).json({
         success: false,
-        message: "User already reviewed this food",
+        message: "You already reviewed this product",
       });
     }
-    const newReview = new ReviewModel({
-      rating: rating,
-      comment: comment,
-      food: food,
-      user: user,
-    });
 
-    const saveReview = await newReview.save();
-
-    const existingFoo = await FoodModel.findById(food);
-    if (!existingFoo) {
-      return res.status(400).json({
+    const foodDoc = await FoodModel.findById(food);
+    if (!foodDoc) {
+      return res.status(404).json({
         success: false,
-        message: "Food Not Found",
+        message: "Food not found",
       });
     }
 
-    const existingUser = await UserModel.findById(user);
-    if (!existingUser) {
-      return res.status(400).json({
+    const userDoc = await UserModel.findById(user);
+    if (!userDoc) {
+      return res.status(404).json({
         success: false,
-        message: "User Not Found",
+        message: "User not found",
       });
     }
 
-    existingUser.reviews.push(saveReview._id);
-    await existingUser.save();
+    const newReview = new ReviewModel({ rating, comment, food, user });
+    const savedReview = await newReview.save();
 
-    existingFoo.reviews.push(saveReview._id);
-    await existingFoo.save();
+    userDoc.reviews.push(savedReview._id);
+    await userDoc.save();
 
-    res.status(200).json({
+    // foodDoc.reviews.push(savedReview._id);
+    await foodDoc.save();
+
+    return res.status(201).json({
       success: true,
-      message: "Rating Post Successfully",
-      data: saveReview,
+      message: "Review submitted successfully",
+      data: savedReview,
     });
   } catch (err) {
-    next(handleError(500, err.message));
+    return res.status(500).json({
+      success: false,
+      message: err.message || "Internal Server Error",
+    });
   }
 };
+
 
 const editReview = async (req, res, next) => {
   try {
@@ -225,4 +224,5 @@ module.exports = {
   getAllReviews,
   getSingleReview,
   reviewDelete,
+  
 };
