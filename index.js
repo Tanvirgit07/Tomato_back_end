@@ -15,6 +15,7 @@ const paymentRouter = require("./routers/paymentRouter/paymentRouter");
 const webHookRouter = require("./routers/webHookRouter/webHookRouter");
 const bestProductRouter = require("./controllers/bestSellController/bestSellRouter");
 const offerRouter = require("./routers/offerRouter/offerRouter");
+const becomeSellerRouter = require("./models/becomeASellerModel/becomeASellerRouter");
 const PORT = 5000;
 
 const app = express();
@@ -44,6 +45,7 @@ app.use("/api/v1/wishlist", wishListRouter)
 app.use("/api/v1/payment",paymentRouter)
 app.use('/api/v1/bestsell',bestProductRouter)
 app.use("/api/v1/offer", offerRouter);
+app.use("/api/v1/seller", becomeSellerRouter);
 
 
 // connect DB

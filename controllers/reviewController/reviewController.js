@@ -96,7 +96,7 @@ const editReview = async (req, res, next) => {
 const getAllReviews = async (req, res, next) => {
   try {
     const allReviews = await ReviewModel.find()
-      .populate("user")
+      .populate("user", )
       .populate("food");
 
     res.status(200).json({

@@ -8,46 +8,94 @@ const cloudinary = require("../../cloudinary/cloudinaryConfig");
 
 const createUser = async (req, res, next) => {
   try {
-    const { name, email, password, confirmPassword, phoneNumber, termsAndCondition } = req.body;
+    const {
+      name,
+      email,
+      password,
+      confirmPassword,
+      phoneNumber,
+      termsAndCondition,
+    } = req.body;
 
-    if (!name || !email || !password || !confirmPassword || !phoneNumber || termsAndCondition === undefined) {
-      return res.status(400).json({ success: false, message: "All fields are required" });
+
+    // 1️⃣ Check all required fields
+    if (
+      !name ||
+      !email ||
+      !password ||
+      !confirmPassword ||
+      !phoneNumber ||
+      termsAndCondition === undefined
+    ) {
+      return res
+        .status(400)
+        .json({ success: false, message: "All fields are required" });
     }
 
+    // 2️⃣ Terms & conditions must be accepted
     if (!termsAndCondition) {
-      return res.status(400).json({ success: false, message: "You must accept the terms and conditions" });
+      return res.status(400).json({
+        success: false,
+        message: "You must accept the terms and conditions",
+      });
     }
 
+    // 3️⃣ Password confirmation
     if (password !== confirmPassword) {
-      return res.status(400).json({ success: false, message: "Passwords do not match!" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Passwords do not match!" });
     }
 
+    // 4️⃣ Check if user already exists
     const existingUser = await UserModel.findOne({
       $or: [{ email }, { phoneNumber }],
     });
 
+    console.log(existingUser)
+
     if (existingUser) {
-      return res.status(409).json({ success: false, message: "User already registered!" });
+      console.log("Existing User Found:", existingUser);
+      return res
+        .status(409)
+        .json({ success: false, message: "User already registered!" });
     }
 
+    // 5️⃣ Hash the password
     const hashPassword = await bcrypt.hash(password, 10);
 
-    const newUser = await UserModel.create({
-      name,
-      email,
-      password: hashPassword,
-      phoneNumber,
-      termsAndCondition,
-    });
+    // 6️⃣ Create new user with duplicate key handling
+    let newUser;
+    try {
+      newUser = await UserModel.create({
+        name,
+        email,
+        password: hashPassword,
+        phoneNumber,
+        termsAndCondition,
+      });
+    } catch (err) {
+      if (err.code === 11000) {
+        // Duplicate key error
+        const duplicateField = Object.keys(err.keyValue)[0];
+        return res.status(409).json({
+          success: false,
+          message: `User with this ${duplicateField} already exists!`,
+        });
+      }
+      throw err; // rethrow other errors
+    }
 
-    // await newUser.save();
+    console.log("New User Created:", newUser);
 
+    // 7️⃣ Return success response
     res.status(201).json({
       success: true,
       message: "User created successfully!",
       newUser,
     });
   } catch (err) {
+    console.error("Error in createUser:", err);
     next(handleError(500, err.message));
   }
 };
