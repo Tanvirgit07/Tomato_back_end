@@ -1,4 +1,5 @@
 const handleError = require("../../helper/handelError/handleError");
+const sendMail = require("../../helper/mailSend/mailSend");
 const UserModel = require("../user/userModel");
 const SellerModel = require("./becomeAsellerModel");
 const jwt = require("jsonwebtoken"); 
@@ -111,12 +112,50 @@ const selllerStatusChange = async (req, res, next) => {
       );
     }
 
+    // 7️⃣ Send mail notification to seller
+    let subject = "";
+    let html = "";
+
+    if (status === "approved") {
+      subject = "🎉 Your Seller Account Has Been Approved!";
+      html = `
+        <h2>Congratulations ${existingUser.name || "User"}!</h2>
+        <p>Your seller account request has been <b>approved</b>. 🎊</p>
+        <p>You can now log in and start selling your products.</p>
+        <br/>
+        <p>Best Regards,<br/>Team</p>
+      `;
+    } else if (status === "rejected") {
+      subject = "❌ Your Seller Account Request Has Been Rejected";
+      html = `
+        <h2>Hello ${existingUser.name || "User"},</h2>
+        <p>We regret to inform you that your seller account request has been <b>rejected</b>.</p>
+        <p>If you believe this was a mistake, please contact our support team.</p>
+        <br/>
+        <p>Best Regards,<br/>Team</p>
+      `;
+    } else {
+      subject = "ℹ️ Seller Account Status Update";
+      html = `
+        <h2>Hello ${existingUser.name || "User"},</h2>
+        <p>Your seller account status has been updated to <b>${status}</b>.</p>
+        <br/>
+        <p>Best Regards,<br/>Team</p>
+      `;
+    }
+
+    await sendMail({
+      to: email,
+      subject,
+      html,
+    });
+
     return res.status(200).json({
       success: true,
-      message: "Seller status updated successfully!",
+      message: "Seller status updated successfully & email sent!",
       seller: existingSeller,
       user: existingUser,
-      token: newToken, // ✅ ফ্রন্টএন্ডে নতুন টোকেন পাঠানো হচ্ছে
+      token: newToken, // ✅ নতুন টোকেন পাঠানো হচ্ছে
     });
   } catch (err) {
     return res.status(500).json({

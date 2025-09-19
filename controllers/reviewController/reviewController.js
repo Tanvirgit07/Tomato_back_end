@@ -7,6 +7,7 @@ const UserModel = require("../../models/user/userModel");
 const createReview = async (req, res, next) => {
   try {
     const { user, food, rating, comment } = req.body;
+    console.log(user,food,rating,comment)
 
     if (!user || !food || !rating || !comment) {
       return res.status(400).json({
