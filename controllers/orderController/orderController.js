@@ -53,4 +53,34 @@ const createPayment = async (req, res, next) => {
   }
 };
 
-module.exports = { createPayment };
+
+const getAllOrders = async (req, res, next) => {
+  try {
+    console.log("Fetching all orders...");
+
+    // সব orders fetch, user এবং product info populate সহ
+    const orders = await OrderModel.find()
+      .populate("userId", "name email") // user info
+      .populate("products.productId", "name image discountPrice") // product info
+      .sort({ createdAt: -1 }); // newest first
+
+    // total amount calculation
+    const totalAmount = orders.reduce((sum, order) => sum + order.amount, 0);
+
+    res.status(200).json({
+      success: true,
+      totalOrders: orders.length,
+      totalAmount,
+      orders,
+    });
+  } catch (err) {
+    console.error("Error fetching orders:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message || "Something went wrong while fetching orders",
+    });
+  }
+};
+
+
+module.exports = { createPayment,getAllOrders };

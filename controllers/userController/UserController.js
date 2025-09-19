@@ -13,10 +13,8 @@ const createUser = async (req, res, next) => {
       email,
       password,
       confirmPassword,
-      phoneNumber,
       termsAndCondition,
     } = req.body;
-
 
     // 1️⃣ Check all required fields
     if (
@@ -24,12 +22,12 @@ const createUser = async (req, res, next) => {
       !email ||
       !password ||
       !confirmPassword ||
-      !phoneNumber ||
       termsAndCondition === undefined
     ) {
-      return res
-        .status(400)
-        .json({ success: false, message: "All fields are required" });
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
     }
 
     // 2️⃣ Terms & conditions must be accepted
@@ -42,63 +40,55 @@ const createUser = async (req, res, next) => {
 
     // 3️⃣ Password confirmation
     if (password !== confirmPassword) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Passwords do not match!" });
+      return res.status(400).json({
+        success: false,
+        message: "Passwords do not match!",
+      });
     }
 
-    // 4️⃣ Check if user already exists
-    const existingUser = await UserModel.findOne({
-      $or: [{ email }, { phoneNumber }],
-    });
-
-    console.log(existingUser)
-
-    if (existingUser) {
-      console.log("Existing User Found:", existingUser);
-      return res
-        .status(409)
-        .json({ success: false, message: "User already registered!" });
+    // 4️⃣ Check if user already exists by email
+    const existingEmailUser = await UserModel.findOne({ email: email.trim() });
+    if (existingEmailUser) {
+      return res.status(400).json({
+        success: false,
+        message: "User with this email already exists!",
+      });
     }
 
     // 5️⃣ Hash the password
     const hashPassword = await bcrypt.hash(password, 10);
 
-    // 6️⃣ Create new user with duplicate key handling
-    let newUser;
-    try {
-      newUser = await UserModel.create({
-        name,
-        email,
-        password: hashPassword,
-        phoneNumber,
-        termsAndCondition,
-      });
-    } catch (err) {
-      if (err.code === 11000) {
-        // Duplicate key error
-        const duplicateField = Object.keys(err.keyValue)[0];
-        return res.status(409).json({
-          success: false,
-          message: `User with this ${duplicateField} already exists!`,
-        });
-      }
-      throw err; // rethrow other errors
-    }
+    // 6️⃣ Create new user (phoneNumber removed)
+    const newUser = await UserModel.create({
+      name: name.trim(),
+      email: email.trim(),
+      password: hashPassword,
+      termsAndCondition,
+    });
 
-    console.log("New User Created:", newUser);
+    // 7️⃣ Return success response without password
+    const { password: _, ...userWithoutPassword } = newUser.toObject();
 
-    // 7️⃣ Return success response
     res.status(201).json({
       success: true,
       message: "User created successfully!",
-      newUser,
+      user: userWithoutPassword,
     });
   } catch (err) {
-    console.error("Error in createUser:", err);
+
+    // 8️⃣ Handle duplicate key error
+    if (err.code === 11000) {
+      const duplicateField = Object.keys(err.keyValue)[0];
+      return res.status(409).json({
+        success: false,
+        message: `User with this ${duplicateField} already exists!`,
+      });
+    }
+
     next(handleError(500, err.message));
   }
 };
+
 
 const signIn = async (req, res, next) => {
   try {
@@ -155,7 +145,7 @@ const signIn = async (req, res, next) => {
 const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
-    
+
     const user = await UserModel.findOne({ email: email });
     if (!user) {
       res.status(400).json({

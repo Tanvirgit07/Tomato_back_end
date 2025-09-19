@@ -98,6 +98,7 @@ const getAllReviews = async (req, res, next) => {
     const allReviews = await ReviewModel.find()
       .populate("user", )
       .populate("food");
+      console.log(allReviews)
 
     res.status(200).json({
       success: true,
