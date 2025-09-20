@@ -7,14 +7,33 @@ const FoodModel = require("../../models/foodModel/foodModel");
 
 const addFood = async (req, res, next) => {
   try {
-    const { name, description, price, categoryId, subCategoryId, discountPrice, stock } = req.body;
+    const {
+      name,
+      description,
+      price,
+      categoryId,
+      subCategoryId,
+      discountPrice,
+      stock,
+    } = req.body;
 
-    if (!name || !description || !price || !categoryId || !subCategoryId || !discountPrice) {
-      return res.status(400).json({ success: false, message: "All fields are required" });
+    if (
+      !name ||
+      !description ||
+      !price ||
+      !categoryId ||
+      !subCategoryId ||
+      !discountPrice
+    ) {
+      return res
+        .status(400)
+        .json({ success: false, message: "All fields are required" });
     }
 
     if (!req.files["image"]) {
-      return res.status(400).json({ success: false, message: "Main image is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Main image is required" });
     }
 
     // find category & subcategory
@@ -22,7 +41,9 @@ const addFood = async (req, res, next) => {
     const subCategory = await SubCategoryModel.findById(subCategoryId);
 
     // upload main image to cloudinary
-    const mainImageResult = await cloudinary.uploader.upload(req.files["image"][0].path);
+    const mainImageResult = await cloudinary.uploader.upload(
+      req.files["image"][0].path
+    );
 
     // upload subImages
     let subImages = [];
@@ -33,6 +54,12 @@ const addFood = async (req, res, next) => {
           return { url: result.secure_url, publicId: result.public_id };
         })
       );
+    }
+
+    // ✅ role অনুযায়ী status set
+    let productStatus = "pending";
+    if (req.user.role === "admin") {
+      productStatus = "approved";
     }
 
     const newFood = new FoodModel({
@@ -46,22 +73,35 @@ const addFood = async (req, res, next) => {
       subImages,
       category: { _id: category._id, name: category.categoryName },
       subCategory: { _id: subCategory._id, name: subCategory.name },
+
+      status: productStatus, // 👈 এখানে role-based status আসবে
+      user: req.user._id, // 👈 কে এই product তৈরি করেছে সেটা track হবে
     });
 
     await newFood.save();
 
-    res.status(200).json({ success: true, message: "Food created successfully", data: newFood });
+    res.status(200).json({
+      success: true,
+      message: "Food created successfully",
+      data: newFood,
+    });
   } catch (err) {
     next(err);
   }
 };
 
-
 const updateFood = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, description, price, discountPrice, categoryId, subCategoryId, stock } =
-      req.body;
+    const {
+      name,
+      description,
+      price,
+      discountPrice,
+      categoryId,
+      subCategoryId,
+      stock,
+    } = req.body;
 
     // 🟢 Check if food exists
     const existingFood = await FoodModel.findById(id);
@@ -152,17 +192,27 @@ const updateFood = async (req, res, next) => {
 
 const getAllFood = async (req, res, next) => {
   try {
-    const {name, category} = req.query;
+    const { name, category, status } = req.query; // 🔹 query থেকে আসবে
+
     const filter = {};
+
+    // 🔍 name দিয়ে filter
     if (name && name.trim()) {
       filter.name = { $regex: name, $options: "i" };
     }
 
-    if(category && category.trim()){
-      filter["category.name"] = {$regex: category, $options: "i" }
+    // 🔍 category দিয়ে filter
+    if (category && category.trim()) {
+      filter["category.name"] = { $regex: category, $options: "i" };
     }
 
-    const allFood = await FoodModel.find(filter)
+    // 🔍 status দিয়ে filter
+    if (status && status.trim()) {
+      filter.status = status; // 👈 pending / approved / rejected
+    }
+
+    // 🛠️ Query
+    const allFood = await FoodModel.find(filter).populate("user", "role email");
 
     res.status(200).json({
       success: true,
@@ -170,7 +220,7 @@ const getAllFood = async (req, res, next) => {
       data: allFood,
     });
   } catch (err) {
-    next(handleError(500, err.message));
+    next({ status: 500, message: err.message });
   }
 };
 const singleFood = async (req, res, next) => {
@@ -226,10 +276,54 @@ const deleteFood = async (req, res, next) => {
     return next(handleError(500, err.message));
   }
 };
+
+const updateFoodStatus = async (req, res, next) => {
+  try {
+    const { foodId } = req.params; // product id আসবে params থেকে
+    const { status } = req.body;   // approved / rejected আসবে body থেকে
+
+    // status validation
+    if (!["pending", "approved", "rejected"].includes(status)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid status value" });
+    }
+
+    // শুধুমাত্র admin status change করতে পারবে
+    // if (req.user.role !== "admin") {
+    //   return res
+    //     .status(403)
+    //     .json({ success: false, message: "Only admin can update product status" });
+    // }
+    // product find and update
+    const updatedFood = await FoodModel.findByIdAndUpdate(
+      foodId,
+      { status },
+      { new: true }
+    )
+
+    if (!updatedFood) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Food not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Food status updated to ${status}`,
+      data: updatedFood,
+    });
+  } catch (err) {
+    next(handleError(500, err.message));
+  }
+};
+
+
 module.exports = {
   addFood,
   updateFood,
   getAllFood,
   singleFood,
   deleteFood,
+  updateFoodStatus
 };

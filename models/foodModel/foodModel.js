@@ -44,8 +44,6 @@
 // const FoodModel = mongoose.model("food", foodSchema);
 // module.exports = FoodModel;
 
-
-
 const mongoose = require("mongoose");
 
 const foodSchema = new mongoose.Schema(
@@ -70,6 +68,7 @@ const foodSchema = new mongoose.Schema(
         ref: "Category",
         required: true,
       },
+
       name: { type: String, required: true },
     },
     sales: { type: Number, default: 0 },
@@ -83,6 +82,12 @@ const foodSchema = new mongoose.Schema(
       name: { type: String, required: true },
     },
 
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
+
     // 🔹 এখানে Offer Relation
     offers: [
       {
@@ -90,6 +95,10 @@ const foodSchema = new mongoose.Schema(
         ref: "OfferProduct",
       },
     ],
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "users",
+    },
   },
   { timestamps: true }
 );
