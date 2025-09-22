@@ -83,4 +83,30 @@ const getAllOrders = async (req, res, next) => {
 };
 
 
-module.exports = { createPayment, getAllOrders };
+const getSingleOrders = async (req, res, next) => {
+  try {
+    const { id } = req.params; // URL থেকে orderId
+    console.log(id)
+
+    const order = await OrderModel.findById(id)
+      .populate("userId", "name email") // order করা user
+      .populate("products.productId", "name image discountPrice") // product info
+      .populate("products.createdBy", "name email role"); // seller info
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      order,
+    });
+  } catch (err) {
+    next(handleError(500,err.message))
+  }
+};
+
+module.exports = { createPayment, getAllOrders, getSingleOrders };

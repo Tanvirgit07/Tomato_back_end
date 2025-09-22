@@ -5,24 +5,46 @@ const SubCategoryModel = require("../../models/subCategorymodel/subCategoryModel
 
 const addCategory = async (req, res, next) => {
   try {
-    const { categoryName, categorydescription } = req.body;
-    const image = req.file;
-    if (!categoryName || !categorydescription || !image) {
-      return res.status(400).json({
+    // Middleware থেকে আসা user
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({
         success: false,
-        message: "All fild are required !",
+        message: "Unauthorized, user not found",
       });
     }
 
+    const { categoryName, categorydescription } = req.body;
+    const image = req.file;
+
+    if (!categoryName || !categorydescription || !image) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required!",
+      });
+    }
+
+    // Upload image to Cloudinary
     const result = await cloudinary.uploader.upload(req.file.path);
+
+    // Determine status based on creator role
+    let status = "pending";
+    if (user.role && user.role.toLowerCase() === "admin") {
+      status = "approved";
+    }
+
+    // Create new category
     const newCategory = new categoryModel({
       categoryName,
       categorydescription,
       publicId: result.public_id,
       image: result.secure_url,
+      createdBy: user._id, // attach creator
+      status,             // auto status
     });
 
     const saveCategory = await newCategory.save();
+
     return res.status(200).json({
       success: true,
       message: "Category created successfully!",
@@ -32,6 +54,7 @@ const addCategory = async (req, res, next) => {
     next(handleError(500, err.message));
   }
 };
+
 
 const editCategory = async (req, res, next) => {
   try {

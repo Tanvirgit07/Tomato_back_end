@@ -18,6 +18,11 @@ const categorySchema = new mongoose.Schema({
   publicId: {
     type: String,
   },
+  status: {           // ✅ new field
+    type: String,
+    enum: ["pending", "approved"],
+    default: "pending",
+  },
   subCategory: [
     {
       type: mongoose.Schema.Types.ObjectId,

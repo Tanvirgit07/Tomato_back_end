@@ -7,9 +7,10 @@ const {
   deleteCategory,
 } = require("../../controllers/categoryController/categoryController");
 const upload = require("../../multer/singleFileUploade/singleFileUpload");
+const { isLogin } = require('../../customMiddleWare/customMiddleWare');
 const categoryRouter = express.Router();
 
-categoryRouter.post("/addcategory", upload.single("image"), addCategory);
+categoryRouter.post("/addcategory",isLogin, upload.single("image"), addCategory);
 categoryRouter.put("/editcategory/:id",upload.single("image"), editCategory);
 categoryRouter.get("/allcategory", getAllCategory);
 categoryRouter.get("/singlecategory/:id", getCategoryById);
