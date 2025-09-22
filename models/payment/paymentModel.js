@@ -17,6 +17,13 @@ const orderSchema = new mongoose.Schema(
         name: { type: String, required: true },
         quantity: { type: Number, required: true },
         price: { type: Number, required: true },
+
+        // এখানে createdBy যুক্ত করা হলো
+        createdBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "users", // আপনার user model এর নাম যেটা আছে সেটার ref দিন
+          required: true,
+        },
       },
     ],
     amount: { type: Number, required: true },
@@ -26,7 +33,7 @@ const orderSchema = new mongoose.Schema(
       default: "pending",
     },
     checkoutSessionId: { type: String }, // Stripe checkout session id
-    paymentIntentId: { type: String },   // Stripe payment intent id
+    paymentIntentId: { type: String }, // Stripe payment intent id
   },
   { timestamps: true }
 );

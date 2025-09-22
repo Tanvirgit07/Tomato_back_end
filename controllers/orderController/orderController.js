@@ -41,6 +41,7 @@ const createPayment = async (req, res, next) => {
         name: p.productId.name,
         quantity: p.quantity,
         price: p.productId.discountPrice,
+        createdBy: p.productId.user, // 👉 এখান থেকে নেবেন (product.user)
       })),
       amount: totalAmount,
       status: "pending",
@@ -53,15 +54,14 @@ const createPayment = async (req, res, next) => {
   }
 };
 
-
 const getAllOrders = async (req, res, next) => {
   try {
     console.log("Fetching all orders...");
 
-    // সব orders fetch, user এবং product info populate সহ
     const orders = await OrderModel.find()
-      .populate("userId", "name email") // user info
-      .populate("products.productId", "name image discountPrice") // product info
+      .populate("userId", "name email") // Order করা user
+      .populate("products.productId", "name image discountPrice") // Product info
+      .populate("products.createdBy", "name email role") // 👉 Product এর seller info
       .sort({ createdAt: -1 }); // newest first
 
     // total amount calculation
@@ -83,4 +83,4 @@ const getAllOrders = async (req, res, next) => {
 };
 
 
-module.exports = { createPayment,getAllOrders };
+module.exports = { createPayment, getAllOrders };
