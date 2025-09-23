@@ -161,10 +161,48 @@ const deleteCategory = async (req, res, next) => {
   }
 };
 
+const updateCategoryStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params; // category ID from URL
+    const { status } = req.body; // new status from body
+
+    // Validate status
+    if (!["pending", "approved", "rejected"].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status. Allowed: pending, approved, rejected",
+      });
+    }
+
+    // Update category
+    const updatedCategory = await categoryModel.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedCategory) {
+      return res.status(404).json({
+        success: false,
+        message: "Category not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Category status updated successfully",
+      data: updatedCategory,
+    });
+  } catch (err) {
+    next(handleError(500, err.message));
+  }
+};
+
 module.exports = {
   addCategory,
   editCategory,
   getAllCategory,
   getCategoryById,
   deleteCategory,
+  updateCategoryStatus
 };

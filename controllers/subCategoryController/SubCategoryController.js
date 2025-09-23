@@ -6,9 +6,8 @@ const SubCategoryModel = require("../../models/subCategorymodel/subCategoryModel
 const addSubCategory = async (req, res, next) => {
   try {
     const { name, description, category } = req.body;
-
     const image = req.file;
-    console.log(name, description, category, image);
+
     if (!name || !description || !category || !image) {
       return res.status(400).json({
         success: false,
@@ -16,21 +15,29 @@ const addSubCategory = async (req, res, next) => {
       });
     }
 
+    // Upload to cloudinary
     const result = await cloudinary.uploader.upload(req.file.path);
 
+    // ✅ Role অনুযায়ী status ঠিক করা
+    let status = "pending";
+    if (req.user && req.user.role && req.user.role.toLowerCase() === "admin") {
+      status = "active";
+    }
+
+    // Create SubCategory
     const subcategory = new SubCategoryModel({
-      name: name,
-      description: description,
-      category: category,
+      name,
+      description,
+      category,
       image: result.secure_url,
       publicId: result.public_id,
+      status, // ✅ এখানে সেট হচ্ছে
     });
 
-    const sevCategory = await subcategory.save();
+    const saveSubCategory = await subcategory.save();
 
+    // Main Category তে push করা
     const mainCategory = await categoryModel.findById(category);
-    console.log(mainCategory);
-
     if (!mainCategory) {
       return res.status(400).json({
         success: false,
@@ -38,17 +45,19 @@ const addSubCategory = async (req, res, next) => {
       });
     }
 
-    mainCategory.subCategory.push(sevCategory._id);
+    mainCategory.subCategory.push(saveSubCategory._id);
     await mainCategory.save();
+
     res.status(200).json({
       success: true,
       message: "Sub Category Created Successfully !",
-      data: sevCategory,
+      data: saveSubCategory,
     });
   } catch (err) {
     next(handleError(500, err.message));
   }
 };
+
 const editSubCategory = async (req, res, next) => {
   try {
     const { name, category, description } = req.body;
@@ -180,10 +189,42 @@ const deleteSubCategory = async (req, res, next) => {
   }
 };
 
+const updateSubCategoryStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const  {status}  = req.body;
+    console.log(id,status)
+
+    // Update subcategory directly
+    const updatedSubCategory = await SubCategoryModel.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+
+    if (!updatedSubCategory) {
+      return res.status(404).json({
+        success: false,
+        message: "SubCategory not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "SubCategory status updated successfully",
+      data: updatedSubCategory,
+    });
+  } catch (err) {
+    next(err); // সরাসরি error pass করা
+  }
+};
+
+
 module.exports = {
   addSubCategory,
   editSubCategory,
   getAllSubCategory,
   getSingleSubCategory,
   deleteSubCategory,
+  updateSubCategoryStatus,
 };
