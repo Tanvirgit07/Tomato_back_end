@@ -215,8 +215,6 @@ const editOffer = async (req, res, next) => {
 };
 
 
-
-
 const getAllOffers = async (req, res) => {
   try {
     const offers = await OfferModel.find()
