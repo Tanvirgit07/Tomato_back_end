@@ -185,7 +185,7 @@ const updateFood = async (req, res, next) => {
       data: updatedFood,
     });
   } catch (err) {
-    console.error("Update Food Error:", err);
+    // console.error("Update Food Error:", err);
     next(handleError(500, err.message));
   }
 };
@@ -252,7 +252,7 @@ const singleFood = async (req, res, next) => {
 const deleteFood = async (req, res, next) => {
   try {
     const { id } = req.params;
-    console.log(id);
+    // console.log(id);
     // Validate ObjectId
     if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
       return next(handleError(400, "Invalid food ID!"));

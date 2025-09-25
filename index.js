@@ -17,6 +17,7 @@ const bestProductRouter = require("./controllers/bestSellController/bestSellRout
 const offerRouter = require("./routers/offerRouter/offerRouter");
 const becomeSellerRouter = require("./models/becomeASellerModel/becomeASellerRouter");
 const blogRouter = require("./routers/blogRouter/blogRouter");
+const blogCommentRouter = require("./routers/blogCommentRouter/blogCommentRouter");
 const PORT = 5000;
 
 const app = express();
@@ -48,6 +49,7 @@ app.use('/api/v1/bestsell',bestProductRouter)
 app.use("/api/v1/offer", offerRouter);
 app.use("/api/v1/seller", becomeSellerRouter);
 app.use("/api/v1/blog", blogRouter);
+app.use("/api/v1/blogcomment",blogCommentRouter);
 
 
 // connect DB

@@ -32,6 +32,6 @@ blogRouter.put(
 
 blogRouter.get('/getallblog',getAllBlogsController);
 blogRouter.get('/getsingleblog/:id', getSingleBlogController);
-blogRouter.delete('/deleteblog', deleteBlogController);
+blogRouter.delete('/deleteblog/:id', deleteBlogController);
 
 module.exports = blogRouter;

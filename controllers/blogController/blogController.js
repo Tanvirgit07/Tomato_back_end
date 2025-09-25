@@ -21,8 +21,13 @@ const addBlogController = async (req, res, next) => {
     }
 
     // Upload featured image
-    if (!req.files["featuredImage"] || req.files["featuredImage"].length === 0) {
-      return res.status(400).json({ success: false, message: "Featured image is required" });
+    if (
+      !req.files["featuredImage"] ||
+      req.files["featuredImage"].length === 0
+    ) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Featured image is required" });
     }
 
     const featuredResult = await cloudinary.uploader.upload(
@@ -53,7 +58,10 @@ const addBlogController = async (req, res, next) => {
       content,
       category,
       user: authorId,
-      featuredImage: { url: featuredResult.secure_url, publicId: featuredResult.public_id },
+      featuredImage: {
+        url: featuredResult.secure_url,
+        publicId: featuredResult.public_id,
+      },
       subImages, // array of { url, publicId }
       isPublished: isPublished === "true" || isPublished === true,
     });
@@ -76,7 +84,7 @@ const getAllBlogsController = async (req, res) => {
     const blogs = await BlogModel.find().populate("user", "name email"); // populate author info
     return res.status(200).json({ success: true, data: blogs });
   } catch (error) {
-    console.error("Get All Blogs Error:", error);
+    // console.error("Get All Blogs Error:", error);
     return res
       .status(500)
       .json({ success: false, message: "Server Error", error: error.message });
@@ -94,7 +102,7 @@ const getSingleBlogController = async (req, res) => {
     }
     return res.status(200).json({ success: true, data: blog });
   } catch (error) {
-    console.error("Get Single Blog Error:", error);
+    // console.error("Get Single Blog Error:", error);
     return res
       .status(500)
       .json({ success: false, message: "Server Error", error: error.message });
@@ -104,14 +112,16 @@ const getSingleBlogController = async (req, res) => {
 const updateBlogController = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(id)
+    console.log(id);
     const { title, slug, excerpt, content, category, isPublished } = req.body;
-    console.log(id)
+    console.log(id);
 
     // Find existing blog
     const blog = await BlogModel.findById(id);
     if (!blog) {
-      return res.status(404).json({ success: false, message: "Blog not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Blog not found" });
     }
 
     // Optional: check if current user is the author
@@ -153,9 +163,7 @@ const updateBlogController = async (req, res) => {
       // Delete old subImages from Cloudinary
       if (blog.subImages?.length > 0) {
         await Promise.all(
-          blog.subImages.map((img) =>
-            cloudinary.uploader.destroy(img.publicId)
-          )
+          blog.subImages.map((img) => cloudinary.uploader.destroy(img.publicId))
         );
       }
 
@@ -190,26 +198,37 @@ const updateBlogController = async (req, res) => {
   }
 };
 
-
 const deleteBlogController = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Find blog
     const blog = await BlogModel.findById(id);
     if (!blog) {
-      return res.status(404).json({ success: false, message: "Blog not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Blog not found" });
     }
 
-    // Optional: only author or admin can delete
-    if (blog.user.toString() !== req.user.id) {
-      return res.status(403).json({ success: false, message: "Unauthorized" });
-    }
+    // // ✅ Optional security check (owner or admin only)
+    // if (blog.user.toString() !== req.user.id && req.user.role !== "admin") {
+    //   return res
+    //     .status(403)
+    //     .json({ success: false, message: "Unauthorized to delete this blog" });
+    // }
 
-    await blog.remove();
-    return res.status(200).json({ success: true, message: "Blog deleted successfully" });
+    await blog.deleteOne();
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Blog deleted successfully" });
   } catch (error) {
     console.error("Delete Blog Error:", error);
-    return res.status(500).json({ success: false, message: "Server Error", error: error.message });
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
   }
 };
 
@@ -218,5 +237,5 @@ module.exports = {
   getAllBlogsController,
   getSingleBlogController,
   updateBlogController,
-  deleteBlogController
+  deleteBlogController,
 };
