@@ -232,10 +232,73 @@ const deleteBlogController = async (req, res) => {
   }
 };
 
+
+const toggleLikeBlog = async (req, res) => {
+  try {
+    const { blogId } = req.params;
+    const userId = req.user._id; // ধরে নিচ্ছি JWT auth middleware আছে
+
+    const blog = await BlogModel.findById(blogId);
+    if (!blog) {
+      return res.status(404).json({ success: false, message: "Blog not found" });
+    }
+
+    // Already liked কিনা চেক করবো
+    const alreadyLiked = blog.likes.includes(userId);
+
+    if (alreadyLiked) {
+      // Unlike
+      blog.likes.pull(userId);
+      await blog.save();
+      return res.status(200).json({
+        success: true,
+        liked: false,
+        totalLikes: blog.likes.length,
+        message: "Blog unliked successfully",
+      });
+    } else {
+      // Like
+      blog.likes.push(userId);
+      await blog.save();
+      return res.status(200).json({
+        success: true,
+        liked: true,
+        totalLikes: blog.likes.length,
+        message: "Blog liked successfully",
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+const getBlogLikes = async (req, res) => {
+  try {
+    const { blogId } = req.params;
+
+    const blog = await BlogModel.findById(blogId).populate("likes", "name email");
+    if (!blog) {
+      return res.status(404).json({ success: false, message: "Blog not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      totalLikes: blog.likes.length,
+      likes: blog.likes,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
 module.exports = {
   addBlogController,
   getAllBlogsController,
   getSingleBlogController,
   updateBlogController,
   deleteBlogController,
+  toggleLikeBlog,
+  getBlogLikes
 };

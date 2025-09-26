@@ -49,6 +49,14 @@ const blogSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    // ✅ নতুন ফিল্ড: likes
+    likes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "users", // কে কে like করেছে
+      },
+    ],
   },
   { timestamps: true }
 );

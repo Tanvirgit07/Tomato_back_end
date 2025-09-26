@@ -5,6 +5,8 @@ const {
   getSingleBlogController,
   deleteBlogController,
   updateBlogController,
+  toggleLikeBlog,
+  getBlogLikes,
 } = require("../../controllers/blogController/blogController");
 const upload = require("../../multer/singleFileUploade/singleFileUpload");
 const { isLogin } = require("../../customMiddleWare/customMiddleWare");
@@ -33,5 +35,7 @@ blogRouter.put(
 blogRouter.get('/getallblog',getAllBlogsController);
 blogRouter.get('/getsingleblog/:id', getSingleBlogController);
 blogRouter.delete('/deleteblog/:id', deleteBlogController);
+blogRouter.post('/addlike/:blogId',isLogin,toggleLikeBlog);
+blogRouter.get('/getlikes/:blogId',getBlogLikes);
 
 module.exports = blogRouter;
