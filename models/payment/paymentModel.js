@@ -17,23 +17,51 @@ const orderSchema = new mongoose.Schema(
         name: { type: String, required: true },
         quantity: { type: Number, required: true },
         price: { type: Number, required: true },
-
-        // এখানে createdBy যুক্ত করা হলো
         createdBy: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "users", // আপনার user model এর নাম যেটা আছে সেটার ref দিন
+          ref: "users",
           required: true,
         },
       },
     ],
     amount: { type: Number, required: true },
+
+    // Payment status
     status: {
       type: String,
       enum: ["pending", "paid", "failed"],
       default: "pending",
     },
-    checkoutSessionId: { type: String }, // Stripe checkout session id
-    paymentIntentId: { type: String }, // Stripe payment intent id
+
+    // Delivery status
+    deliveryStatus: {
+      type: String,
+      enum: ["pending", "shipped", "delivered", "cancelled"],
+      default: "pending",
+    },
+
+    // Delivery type
+    deliveryType: {
+      type: String,
+      enum: ["pickup", "delivery"],
+      default: "pickup",
+    },
+
+    // Payment method
+    paymentMethod: {
+      type: String,
+      enum: ["cod", "stripe"],
+      default: "stripe",
+    },
+
+    // Stripe payment
+    checkoutSessionId: { type: String },
+    paymentIntentId: { type: String },
+
+    // COD OTP fields
+    otp: { type: String },             // OTP code
+    otpCreatedAt: { type: Date },      // OTP generation time
+    otpVerified: { type: Boolean, default: false }, // OTP verified flag
   },
   { timestamps: true }
 );
