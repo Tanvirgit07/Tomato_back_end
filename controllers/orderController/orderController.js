@@ -6,9 +6,74 @@ const FoodModel = require("../../models/foodModel/foodModel");
 const OrderModel = require("../../models/payment/paymentModel");
 
 
+// const createPayment = async (req, res, next) => {
+//   try {
+//     const { products, userId, deliveryType, paymentMethod } = req.body;
+
+//     const lineItems = products.map((product) => ({
+//       price_data: {
+//         currency: "usd",
+//         product_data: {
+//           name: product.productId.name,
+//           images: [product.productId.image],
+//         },
+//         unit_amount: Math.round(product.productId.discountPrice * 100),
+//       },
+//       quantity: product.quantity,
+//     }));
+
+//     // Stripe checkout session
+//     let session;
+//     if (paymentMethod === "stripe") {
+//       session = await stripe.checkout.sessions.create({
+//         line_items: lineItems,
+//         payment_method_types: ["card"],
+//         mode: "payment",
+//         success_url: `${process.env.BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+//         cancel_url: `${process.env.BASE_URL}/cancel`,
+//         metadata: { userId },
+//       });
+//     }
+
+//     const totalAmount = products.reduce(
+//       (sum, p) => sum + p.productId.discountPrice * p.quantity,
+//       0
+//     );
+
+//     // Save order
+//     const order = await OrderModel.create({
+//       userId,
+//       products: products.map((p) => ({
+//         productId: p.productId._id,
+//         name: p.productId.name,
+//         quantity: p.quantity,
+//         price: p.productId.discountPrice,
+//         createdBy: p.productId.user,
+//       })),
+//       amount: totalAmount,
+//       status: paymentMethod === "cod" ? "pending" : "pending",
+//       deliveryType: deliveryType || "pickup",
+//       paymentMethod: paymentMethod || "stripe",
+//       checkoutSessionId: session?.id || null,
+//     });
+
+//     if (paymentMethod === "stripe") {
+//       return res.status(200).json({ url: session.url });
+//     }
+
+//     // For COD
+//     return res
+//       .status(200)
+//       .json({ success: true, message: "Order placed with COD", order });
+//   } catch (err) {
+//     next(handleError(500, err.message));
+//   }
+// };
+
+
 const createPayment = async (req, res, next) => {
   try {
-    const { products, userId, deliveryType, paymentMethod } = req.body;
+    const { products, userId, deliveryType, paymentMethod, deliveryInfo, email } = req.body;
 
     const lineItems = products.map((product) => ({
       price_data: {
@@ -22,7 +87,7 @@ const createPayment = async (req, res, next) => {
       quantity: product.quantity,
     }));
 
-    // Stripe checkout session
+    // Stripe checkout session only for stripe payment
     let session;
     if (paymentMethod === "stripe") {
       session = await stripe.checkout.sessions.create({
@@ -31,6 +96,7 @@ const createPayment = async (req, res, next) => {
         mode: "payment",
         success_url: `${process.env.BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${process.env.BASE_URL}/cancel`,
+        customer_email: email,
         metadata: { userId },
       });
     }
@@ -55,6 +121,7 @@ const createPayment = async (req, res, next) => {
       deliveryType: deliveryType || "pickup",
       paymentMethod: paymentMethod || "stripe",
       checkoutSessionId: session?.id || null,
+      deliveryInfo: deliveryInfo || undefined, // <-- added here
     });
 
     if (paymentMethod === "stripe") {
@@ -64,12 +131,12 @@ const createPayment = async (req, res, next) => {
     // For COD
     return res
       .status(200)
-      .json({ success: true, message: "Order placed with COD", order });
+      .json({ success: true, message: "Order placed with COD", orderId: order._id });
   } catch (err) {
-    next(handleError(500, err.message));
+    console.error(err);
+    return res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };
-
 
 const getAllOrders = async (req, res, next) => {
   try {
@@ -107,6 +174,32 @@ const getSingleOrders = async (req, res, next) => {
         .json({ success: false, message: "Order not found" });
 
     res.status(200).json({ success: true, order });
+  } catch (err) {
+    next(handleError(500, err.message));
+  }
+};
+
+const getOrdersByEmail = async (req, res, next) => {
+  try {
+    const { email } = req.params; // email pathabo route থেকে
+
+    // userId থেকে email মিলিয়ে order খোঁজা
+    const orders = await OrderModel.find()
+      .populate("userId", "name email")
+      .populate("products.productId", "name image discountPrice")
+      .populate("products.createdBy", "name email role");
+
+    // email filter
+    const filteredOrders = orders.filter(
+      (order) => order.userId?.email === email
+    );
+
+    if (filteredOrders.length === 0)
+      return res
+        .status(404)
+        .json({ success: false, message: "No orders found for this email" });
+
+    res.status(200).json({ success: true, orders: filteredOrders });
   } catch (err) {
     next(handleError(500, err.message));
   }
@@ -236,5 +329,6 @@ module.exports = {
   getSingleOrders,
   updateDeliveryStatus,
   placeCODOrder,
-  verifyCODOTP
+  verifyCODOTP,
+  getOrdersByEmail
 };
