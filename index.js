@@ -18,7 +18,7 @@ const offerRouter = require("./routers/offerRouter/offerRouter");
 const becomeSellerRouter = require("./models/becomeASellerModel/becomeASellerRouter");
 const blogRouter = require("./routers/blogRouter/blogRouter");
 const blogCommentRouter = require("./routers/blogCommentRouter/blogCommentRouter");
-// const addressRouter = require("./routers/addressRoute/addressRoute");
+const delivaryRouter = require("./routers/delivaryRoute/delivaryRoute");
 const PORT = 5000;
 
 const app = express();
@@ -30,7 +30,7 @@ app.use("/api/v1",webHookRouter)
 app.use(express.json());
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
+    origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003","http://localhost:3004"],
     // credentials: true,
   })
 );
@@ -51,8 +51,7 @@ app.use("/api/v1/offer", offerRouter);
 app.use("/api/v1/seller", becomeSellerRouter);
 app.use("/api/v1/blog", blogRouter);
 app.use("/api/v1/blogcomment",blogCommentRouter);
-// app.use("/api/v1/address", addressRouter);
-
+app.use("/api/v1/delivary", delivaryRouter);
 
 
 // connect DB

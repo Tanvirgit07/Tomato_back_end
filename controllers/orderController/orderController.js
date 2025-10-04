@@ -4,6 +4,7 @@ const sendMail = require("../../helper/mailSend/mailSend");
 const CartModal = require("../../models/cartModel/cartModel");
 const FoodModel = require("../../models/foodModel/foodModel");
 const OrderModel = require("../../models/payment/paymentModel");
+const UserModel = require("../../models/user/userModel");
 
 
 // const createPayment = async (req, res, next) => {
@@ -144,6 +145,7 @@ const getAllOrders = async (req, res, next) => {
       .populate("userId", "name email")
       .populate("products.productId", "name image discountPrice")
       .populate("products.createdBy", "name email role")
+      .populate("acceptedBy", "name email role")
       .sort({ createdAt: -1 });
 
     const totalAmount = orders.reduce((sum, order) => sum + order.amount, 0);
@@ -181,29 +183,58 @@ const getSingleOrders = async (req, res, next) => {
 
 const getOrdersByEmail = async (req, res, next) => {
   try {
-    const { email } = req.params; // email pathabo route থেকে
+    const { email } = req.params;
 
-    // userId থেকে email মিলিয়ে order খোঁজা
-    const orders = await OrderModel.find()
+    // Find the user first by email
+    const user = await UserModel.findOne({ email }); // Make sure you have UserModel
+    if (!user)
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+
+    // Now find all orders accepted by this user's ID
+    const orders = await OrderModel.find({ acceptedBy: user._id })
       .populate("userId", "name email")
       .populate("products.productId", "name image discountPrice")
-      .populate("products.createdBy", "name email role");
+      .populate("products.createdBy", "name email role")
+      .populate("acceptedBy", "name email role"); // populate acceptedBy details
 
-    // email filter
-    const filteredOrders = orders.filter(
-      (order) => order.userId?.email === email
-    );
-
-    if (filteredOrders.length === 0)
+    if (orders.length === 0)
       return res
         .status(404)
         .json({ success: false, message: "No orders found for this email" });
 
-    res.status(200).json({ success: true, orders: filteredOrders });
+    res.status(200).json({ success: true, orders });
   } catch (err) {
     next(handleError(500, err.message));
   }
 };
+
+// const getOrdersByEmail = async (req, res, next) => {
+//   try {
+//     const { email } = req.params; // email pathabo route থেকে
+
+//     // userId থেকে email মিলিয়ে order খোঁজা
+//     const orders = await OrderModel.find()
+//       .populate("userId", "name email")
+//       .populate("products.productId", "name image discountPrice")
+//       .populate("products.createdBy", "name email role");
+
+//     // email filter
+//     const filteredOrders = orders.filter(
+//       (order) => order.acceptedBy.email === email
+//     );
+
+//     if (filteredOrders.length === 0)
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "No orders found for this email" });
+
+//     res.status(200).json({ success: true, orders: filteredOrders });
+//   } catch (err) {
+//     next(handleError(500, err.message));
+//   }
+// };
 
 const updateDeliveryStatus = async (req, res, next) => {
   try {
