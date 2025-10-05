@@ -7,71 +7,6 @@ const OrderModel = require("../../models/payment/paymentModel");
 const UserModel = require("../../models/user/userModel");
 
 
-// const createPayment = async (req, res, next) => {
-//   try {
-//     const { products, userId, deliveryType, paymentMethod } = req.body;
-
-//     const lineItems = products.map((product) => ({
-//       price_data: {
-//         currency: "usd",
-//         product_data: {
-//           name: product.productId.name,
-//           images: [product.productId.image],
-//         },
-//         unit_amount: Math.round(product.productId.discountPrice * 100),
-//       },
-//       quantity: product.quantity,
-//     }));
-
-//     // Stripe checkout session
-//     let session;
-//     if (paymentMethod === "stripe") {
-//       session = await stripe.checkout.sessions.create({
-//         line_items: lineItems,
-//         payment_method_types: ["card"],
-//         mode: "payment",
-//         success_url: `${process.env.BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-//         cancel_url: `${process.env.BASE_URL}/cancel`,
-//         metadata: { userId },
-//       });
-//     }
-
-//     const totalAmount = products.reduce(
-//       (sum, p) => sum + p.productId.discountPrice * p.quantity,
-//       0
-//     );
-
-//     // Save order
-//     const order = await OrderModel.create({
-//       userId,
-//       products: products.map((p) => ({
-//         productId: p.productId._id,
-//         name: p.productId.name,
-//         quantity: p.quantity,
-//         price: p.productId.discountPrice,
-//         createdBy: p.productId.user,
-//       })),
-//       amount: totalAmount,
-//       status: paymentMethod === "cod" ? "pending" : "pending",
-//       deliveryType: deliveryType || "pickup",
-//       paymentMethod: paymentMethod || "stripe",
-//       checkoutSessionId: session?.id || null,
-//     });
-
-//     if (paymentMethod === "stripe") {
-//       return res.status(200).json({ url: session.url });
-//     }
-
-//     // For COD
-//     return res
-//       .status(200)
-//       .json({ success: true, message: "Order placed with COD", order });
-//   } catch (err) {
-//     next(handleError(500, err.message));
-//   }
-// };
-
-
 const createPayment = async (req, res, next) => {
   try {
     const { products, userId, deliveryType, paymentMethod, deliveryInfo, email } = req.body;
@@ -210,31 +145,49 @@ const getOrdersByEmail = async (req, res, next) => {
   }
 };
 
-// const getOrdersByEmail = async (req, res, next) => {
-//   try {
-//     const { email } = req.params; // email pathabo route থেকে
+const getOrdersByEmailfrontend = async (req, res, next) => {
+  try {
+    const { email } = req.params;
+console.log(email);
+    // Step 1: Find user by email
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
-//     // userId থেকে email মিলিয়ে order খোঁজা
-//     const orders = await OrderModel.find()
-//       .populate("userId", "name email")
-//       .populate("products.productId", "name image discountPrice")
-//       .populate("products.createdBy", "name email role");
+    // Step 2: Find all orders for that user
+    const orders = await OrderModel.find({ userId: user._id })
+      .populate("userId", "name email")
+      .populate("products.productId", "name image discountPrice")
+      .populate("products.createdBy", "name email role")
+      .populate("acceptedBy", "name email role")
+      .sort({ createdAt: -1 }); // newest orders first
 
-//     // email filter
-//     const filteredOrders = orders.filter(
-//       (order) => order.acceptedBy.email === email
-//     );
+    if (!orders.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No orders found for this email",
+      });
+    }
 
-//     if (filteredOrders.length === 0)
-//       return res
-//         .status(404)
-//         .json({ success: false, message: "No orders found for this email" });
+    // Step 3: Calculate total orders and total amount
+    const totalOrders = orders.length;
+    const totalAmount = orders.reduce((sum, order) => sum + (order.amount || 0), 0);
 
-//     res.status(200).json({ success: true, orders: filteredOrders });
-//   } catch (err) {
-//     next(handleError(500, err.message));
-//   }
-// };
+    // Step 4: Send response
+    res.status(200).json({
+      success: true,
+      totalOrders,
+      totalAmount,
+      orders,
+    });
+  } catch (err) {
+    next(handleError(500, err.message));
+  }
+};
 
 const updateDeliveryStatus = async (req, res, next) => {
   try {
@@ -311,7 +264,6 @@ const placeCODOrder = async (req, res) => {
   }
 };
 
-
 const verifyCODOTP = async (req, res) => {
   try {
     const { orderId, otp } = req.body;
@@ -354,6 +306,7 @@ const verifyCODOTP = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
 module.exports = {
   createPayment,
   getAllOrders,
@@ -361,5 +314,6 @@ module.exports = {
   updateDeliveryStatus,
   placeCODOrder,
   verifyCODOTP,
-  getOrdersByEmail
+  getOrdersByEmail,
+  getOrdersByEmailfrontend
 };
