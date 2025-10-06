@@ -46,6 +46,7 @@ app.use("/api/v1/reply", replyRouter);
 app.use("/api/v1/cart", cartRouter);
 app.use("/api/v1/wishlist", wishListRouter)
 app.use("/api/v1/payment",paymentRouter)
+
 app.use('/api/v1/bestsell',bestProductRouter)
 app.use("/api/v1/offer", offerRouter);
 app.use("/api/v1/seller", becomeSellerRouter);
