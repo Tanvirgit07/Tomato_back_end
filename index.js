@@ -35,6 +35,12 @@ app.use(
   })
 );
 
+
+
+app.get("/" , (req,res) => {
+  res.send("Server is running!")
+})
+
 //connect router
 app.use("/api/v1/food", foodRouter);
 app.use("/api/v1/user", userRouter);
@@ -57,6 +63,9 @@ app.use("/api/v1/delivary", delivaryRouter);
 
 // connect DB
 connectBD();
+
+
+
 
 app.listen(PORT, () => {
   console.log(`Server is running port ${PORT}`);
