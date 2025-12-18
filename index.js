@@ -19,6 +19,7 @@ const becomeSellerRouter = require("./models/becomeASellerModel/becomeASellerRou
 const blogRouter = require("./routers/blogRouter/blogRouter");
 const blogCommentRouter = require("./routers/blogCommentRouter/blogCommentRouter");
 const delivaryRouter = require("./routers/delivaryRoute/delivaryRoute");
+const summeryRoute = require("./routers/dashboardSummery/SummeryRoute");
 const PORT = 5000;
 
 const app = express();
@@ -53,6 +54,7 @@ app.use("/api/v1/seller", becomeSellerRouter);
 app.use("/api/v1/blog", blogRouter);
 app.use("/api/v1/blogcomment",blogCommentRouter);
 app.use("/api/v1/delivary", delivaryRouter);
+app.use("/api/v1/summery", summeryRoute)
 
 
 // connect DB
