@@ -1,3 +1,4 @@
+const FoodModel = require("../../models/foodModel/foodModel");
 const OrderModel = require("../../models/payment/paymentModel");
 const UserModel = require("../../models/user/userModel");
 
@@ -22,8 +23,6 @@ const adminDashbaordCards = async (req, res, next) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
-
 
 const dashboardRevenueChart = async (req, res) => {
   try {
@@ -81,5 +80,5 @@ const dashboardRevenueChart = async (req, res) => {
 
 module.exports = {
     adminDashbaordCards,
-    dashboardRevenueChart
+    dashboardRevenueChart,
 }
