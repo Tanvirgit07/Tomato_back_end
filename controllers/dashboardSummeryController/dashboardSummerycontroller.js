@@ -78,7 +78,105 @@ const dashboardRevenueChart = async (req, res) => {
 };
 
 
+const topCategoryProductChart = async (req, res) => {
+  try {
+    const data = await FoodModel.aggregate([
+      // ✅ group by category._id
+      {
+        $group: {
+          _id: "$category._id",
+          totalProducts: { $sum: 1 },
+        },
+      },
+
+      // sort desc
+      { $sort: { totalProducts: -1 } },
+
+      // limit 10
+      { $limit: 10 },
+
+      // lookup category
+      {
+        $lookup: {
+          from: "categories",
+          localField: "_id",
+          foreignField: "_id",
+          as: "category",
+        },
+      },
+
+      // unwind
+      { $unwind: "$category" },
+
+      // final output
+      {
+        $project: {
+          _id: 0,
+          categoryName: "$category.categoryName", // ✅ correct field
+          products: "$totalProducts",
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      message: "Top 10 categories by product count",
+      data,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+const orderStatusOverview = async (req, res) => {
+  try {
+    // 🔹 All possible order statuses
+    const ALL_STATUSES = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"];
+
+    const orderStatusData = await OrderModel.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          totalOrders: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // 🔹 Convert aggregation result to map
+    const statusMap = {};
+    orderStatusData.forEach(item => {
+      statusMap[item._id] = item.totalOrders;
+    });
+
+    // 🔹 Ensure all statuses exist (0 if missing)
+    const formattedData = ALL_STATUSES.map(status => ({
+      status,
+      count: statusMap[status] || 0,
+    }));
+
+    res.status(200).json({
+      success: true,
+      message: "Order status overview fetched successfully",
+      data: formattedData,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+
+
 module.exports = {
     adminDashbaordCards,
     dashboardRevenueChart,
+    topCategoryProductChart,
+    orderStatusOverview
 }
