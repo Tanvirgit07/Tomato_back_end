@@ -60,73 +60,63 @@ const addSubCategory = async (req, res, next) => {
 
 const editSubCategory = async (req, res, next) => {
   try {
-    const { name, category, description } = req.body;
+    const { name, description, category } = req.body; // status removed
     const { id } = req.params;
 
-    // console.log(name,category,image,id);
-    if (!id) {
-      return res.status(400).json({
-        success: false,
-        message: "Subcategory ID is required!",
-      });
+    // Find existing subcategory
+    const existingSubcategory = await SubCategoryModel.findById(id);
+    if (!existingSubcategory) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Subcategory not found" });
     }
 
-    const subCategory = await SubCategoryModel.findById(id);
-    if (!subCategory) {
-      return res.status(404).json({
-        success: false,
-        message: "Subcategory not found!",
-      });
+    // Update fields if provided
+    if (name) existingSubcategory.name = name;
+    if (description) existingSubcategory.description = description;
+
+    // Validate and update category if provided
+    if (category) {
+      const validCategory = await categoryModel.findById(category);
+      if (!validCategory) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid category ID" });
+      }
+      existingSubcategory.category = category;
     }
 
-    // ✅ Only upload new image if provided
+    // Handle image upload if file is provided
     if (req.file) {
-      if (subCategory.publicId) {
-        await cloudinary.uploader.destroy(subCategory.publicId);
+      console.log("Uploading new image to Cloudinary...");
+      if (existingSubcategory.publicId) {
+        await cloudinary.uploader.destroy(existingSubcategory.publicId);
       }
-      const result = await cloudinary.uploader.upload(req.file.path);
-      subCategory.image = result.secure_url;
-      subCategory.publicId = result.public_id;
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "subcategories",
+      });
+      existingSubcategory.image = result.secure_url;
+      existingSubcategory.publicId = result.public_id;
     }
 
-    // ✅ Update fields if provided
-    if (name) subCategory.name = name;
-    if (description) subCategory.description = description;
+    console.log("Before save:", existingSubcategory);
 
-    // ✅ Handle category reassignment
-    if (category && category.toString() !== subCategory.category.toString()) {
-      const oldCategory = await categoryModel.findById(subCategory.category);
-      if (oldCategory) {
-        oldCategory.subCategory = oldCategory.subCategory.filter(
-          (scId) => scId.toString() !== subCategory._id.toString()
-        );
-        await oldCategory.save();
-      }
-
-      const newCategory = await categoryModel.findById(category);
-      if (!newCategory) {
-        return res.status(404).json({
-          success: false,
-          message: "Selected category not found!",
-        });
-      }
-      newCategory.subCategory.push(subCategory._id);
-      await newCategory.save();
-
-      subCategory.category = category;
-    }
-
-    await subCategory.save();
+    // Save updated subcategory
+    const savedSubcategory = await existingSubcategory.save();
+    console.log("Saved subcategory:", savedSubcategory);
 
     res.status(200).json({
       success: true,
-      message: "Subcategory updated successfully!",
-      data: subCategory,
+      message: "Subcategory updated successfully",
+      data: savedSubcategory,
     });
   } catch (err) {
+    console.error("Error in editSubCategory:", err);
     next(handleError(500, err.message));
   }
 };
+
+
 
 const getAllSubCategory = async (req, res, next) => {
   try {
@@ -192,8 +182,8 @@ const deleteSubCategory = async (req, res, next) => {
 const updateSubCategoryStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const  {status}  = req.body;
-    console.log(id,status)
+    const { status } = req.body;
+    console.log(id, status);
 
     // Update subcategory directly
     const updatedSubCategory = await SubCategoryModel.findByIdAndUpdate(
@@ -218,7 +208,6 @@ const updateSubCategoryStatus = async (req, res, next) => {
     next(err); // সরাসরি error pass করা
   }
 };
-
 
 module.exports = {
   addSubCategory,

@@ -20,11 +20,10 @@ const subCategorySchema = new mongoose.Schema(
       ref: "category",
     },
     status: {
-      // ✅ নতুন ফিল্ড
-      type: String,
-      enum: ["pending", "active"],
-      default: "pending",
-    },
+  type: String,
+  enum: ["pending", "active", "approved"], // add approved
+  default: "pending",
+},
     publicId: {
       type: String,
       trim: true,
