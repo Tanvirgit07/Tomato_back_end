@@ -21,7 +21,7 @@ const subCategorySchema = new mongoose.Schema(
     },
     status: {
   type: String,
-  enum: ["pending", "active", "approved"], // add approved
+  enum: ["pending", "rejected", "approved"], // add approved
   default: "pending",
 },
     publicId: {
