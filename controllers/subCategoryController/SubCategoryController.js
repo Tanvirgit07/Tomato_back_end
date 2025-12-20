@@ -37,7 +37,6 @@ const addSubCategory = async (req, res, next) => {
       createdBy: req.user.id, // ✅ FIX
     });
 
-     console.log(subcategory)
     const saveSubCategory = await subcategory.save();
 
    
@@ -69,9 +68,11 @@ const editSubCategory = async (req, res, next) => {
   try {
     const { name, description, category } = req.body; // status removed
     const { id } = req.params;
+    console.log(id)
 
     // Find existing subcategory
     const existingSubcategory = await SubCategoryModel.findById(id);
+    console.log(existingSubcategory)
     if (!existingSubcategory) {
       return res
         .status(404)
@@ -123,8 +124,6 @@ const editSubCategory = async (req, res, next) => {
   }
 };
 
-
-
 const getAllSubCategory = async (req, res, next) => {
   try {
     const allSubCategory = await SubCategoryModel.find().populate("category");
@@ -135,6 +134,7 @@ const getAllSubCategory = async (req, res, next) => {
     });
   } catch (err) {}
 };
+
 const getSingleSubCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -154,11 +154,7 @@ const getSingleSubCategory = async (req, res, next) => {
 const getSubCategoriesByEmail = async (req, res, next) => {
   try {
     const { email } = req.params;
-
-    // 1️⃣ find user by email
     const user = await UserModel.findOne({ email });
-    console.log(email)
-
     if (!user) {
       return res.status(404).json({
         success: false,
