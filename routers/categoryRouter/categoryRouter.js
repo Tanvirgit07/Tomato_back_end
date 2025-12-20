@@ -6,6 +6,7 @@ const {
   getCategoryById,
   deleteCategory,
   updateCategoryStatus,
+  getCategoriesByEmail,
 } = require("../../controllers/categoryController/categoryController");
 const upload = require("../../multer/singleFileUploade/singleFileUpload");
 const { isLogin } = require('../../customMiddleWare/customMiddleWare');
@@ -17,5 +18,7 @@ categoryRouter.get("/allcategory", getAllCategory);
 categoryRouter.get("/singlecategory/:id", getCategoryById);
 categoryRouter.delete("/deletecategory/:id", deleteCategory);
 categoryRouter.put("/update-status/:id", updateCategoryStatus);
+categoryRouter.get("/categorybyemail/:email", getCategoriesByEmail);
+
 
 module.exports = categoryRouter;

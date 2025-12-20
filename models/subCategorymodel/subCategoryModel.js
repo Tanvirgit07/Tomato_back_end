@@ -19,6 +19,11 @@ const subCategorySchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "category",
     },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "users",
+      required: true,
+    },
     status: {
   type: String,
   enum: ["pending", "rejected", "approved"], // add approved

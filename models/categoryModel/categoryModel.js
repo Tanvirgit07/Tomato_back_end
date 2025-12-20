@@ -23,6 +23,11 @@ const categorySchema = new mongoose.Schema({
     enum: ["pending", "approved"],
     default: "pending",
   },
+  createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "users",
+      required: true,
+    },
   subCategory: [
     {
       type: mongoose.Schema.Types.ObjectId,

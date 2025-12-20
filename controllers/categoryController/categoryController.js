@@ -2,6 +2,7 @@ const cloudinary = require("../../cloudinary/cloudinaryConfig");
 const handleError = require("../../helper/handelError/handleError");
 const categoryModel = require("../../models/categoryModel/categoryModel");
 const SubCategoryModel = require("../../models/subCategorymodel/subCategoryModel");
+const UserModel = require("../../models/user/userModel");
 
 const addCategory = async (req, res, next) => {
   try {
@@ -133,6 +134,34 @@ const getCategoryById = async (req, res, next) => {
   }
 };
 
+const getCategoriesByEmail = async (req, res, next) => {
+  try {
+    const { email } = req.params;
+    // 1️⃣ find user by email
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found with this email",
+      });
+    }
+
+    // 2️⃣ find categories created by this user
+    const categories = await categoryModel
+      .find({ createdBy: user._id })
+      .populate("subCategory");
+
+    res.status(200).json({
+      success: true,
+      message: "",
+      data: categories,
+    });
+  } catch (err) {
+    next(handleError(500, err.message));
+  }
+};
+
+
 const deleteCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -204,5 +233,6 @@ module.exports = {
   getAllCategory,
   getCategoryById,
   deleteCategory,
-  updateCategoryStatus
+  updateCategoryStatus,
+  getCategoriesByEmail
 };

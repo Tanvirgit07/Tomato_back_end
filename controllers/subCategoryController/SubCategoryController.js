@@ -2,6 +2,7 @@ const cloudinary = require("../../cloudinary/cloudinaryConfig");
 const handleError = require("../../helper/handelError/handleError");
 const categoryModel = require("../../models/categoryModel/categoryModel");
 const SubCategoryModel = require("../../models/subCategorymodel/subCategoryModel");
+const UserModel = require("../../models/user/userModel");
 
 const addSubCategory = async (req, res, next) => {
   try {
@@ -17,11 +18,12 @@ const addSubCategory = async (req, res, next) => {
 
     // Upload to cloudinary
     const result = await cloudinary.uploader.upload(req.file.path);
+   
 
     // ✅ Role অনুযায়ী status ঠিক করা
     let status = "pending";
     if (req.user && req.user.role && req.user.role.toLowerCase() === "admin") {
-      status = "active";
+      status = "approved";
     }
 
     // Create SubCategory
@@ -32,9 +34,13 @@ const addSubCategory = async (req, res, next) => {
       image: result.secure_url,
       publicId: result.public_id,
       status, // ✅ এখানে সেট হচ্ছে
+      createdBy: req.user.id, // ✅ FIX
     });
 
+     console.log(subcategory)
     const saveSubCategory = await subcategory.save();
+
+   
 
     // Main Category তে push করা
     const mainCategory = await categoryModel.findById(category);
@@ -59,6 +65,7 @@ const addSubCategory = async (req, res, next) => {
 };
 
 const editSubCategory = async (req, res, next) => {
+  console.log("ame")
   try {
     const { name, description, category } = req.body; // status removed
     const { id } = req.params;
@@ -144,6 +151,36 @@ const getSingleSubCategory = async (req, res, next) => {
   }
 };
 
+const getSubCategoriesByEmail = async (req, res, next) => {
+  try {
+    const { email } = req.params;
+
+    // 1️⃣ find user by email
+    const user = await UserModel.findOne({ email });
+    console.log(email)
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found with this email",
+      });
+    }
+
+    // 2️⃣ find all subcategories created by this user
+    const subCategories = await SubCategoryModel.find({
+      createdBy: user._id,
+    }).populate("category");
+
+    res.status(200).json({
+      success: true,
+      message: "Success fetch sub-categories by email!",
+      data: subCategories,
+    });
+  } catch (err) {
+    next(handleError(500, err.message));
+  }
+};
+
 const deleteSubCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -216,4 +253,5 @@ module.exports = {
   getSingleSubCategory,
   deleteSubCategory,
   updateSubCategoryStatus,
+  getSubCategoriesByEmail
 };
