@@ -5,6 +5,7 @@ const CartModal = require("../../models/cartModel/cartModel");
 const FoodModel = require("../../models/foodModel/foodModel");
 const OrderModel = require("../../models/payment/paymentModel");
 const UserModel = require("../../models/user/userModel");
+const mongoose = require('mongoose');
 
 
 const createPayment = async (req, res, next) => {
@@ -96,6 +97,27 @@ const getAllOrders = async (req, res, next) => {
   }
 };
 
+// const getSingleOrders = async (req, res, next) => {
+//   try {
+//     const { id } = req.params;
+
+//     const order = await OrderModel.findById(id)
+//       .populate("userId", "name email")
+//       .populate("products.productId", "name image discountPrice")
+//       .populate("products.createdBy", "name email role");
+
+//     if (!order)
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Order not found" });
+
+//     res.status(200).json({ success: true, order });
+//   } catch (err) {
+//     next(handleError(500, err.message));
+//   }
+// };
+
+
 const getSingleOrders = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -103,14 +125,43 @@ const getSingleOrders = async (req, res, next) => {
     const order = await OrderModel.findById(id)
       .populate("userId", "name email")
       .populate("products.productId", "name image discountPrice")
-      .populate("products.createdBy", "name email role");
+      .populate("products.createdBy", "name email role")
+      .lean(); // ✅ important
 
-    if (!order)
+    if (!order) {
       return res
         .status(404)
         .json({ success: false, message: "Order not found" });
+    }
 
-    res.status(200).json({ success: true, order });
+    // ✅ Debug log (confirm deliveryInfo)
+    console.log("DELIVERY INFO:", order.deliveryInfo);
+
+    res.status(200).json({
+      success: true,
+      order,
+    });
+  } catch (err) {
+    console.error("Get single order error:", err);
+    next(handleError(500, err.message));
+  }
+};
+
+const getRiderOrders = async (req, res, next) => {
+  try {
+    const orders = await OrderModel.find({
+      deliveryType: "delivery", // ✅ ONLY HOME DELIVERY
+      deliveryStatus: "pending", // optional (new orders)
+    })
+      .populate("userId", "name email")
+      .populate("products.productId", "name image discountPrice")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      totalOrders: orders.length,
+      orders,
+    });
   } catch (err) {
     next(handleError(500, err.message));
   }
@@ -212,55 +263,72 @@ const updateDeliveryStatus = async (req, res, next) => {
 };
 
 const placeCODOrder = async (req, res) => {
-  const generateOTP = () =>
-    Math.floor(100000 + Math.random() * 900000).toString();
-
   try {
-    const { userId, products, deliveryType, email } = req.body;
+    const { userId, products, deliveryType, deliveryInfo } = req.body;
 
-    const totalAmount = products.reduce(
-      (sum, p) => sum + p.productId.discountPrice * p.quantity,
-      0
-    );
+    if (!userId || !products || products.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order data",
+      });
+    }
 
-    const otp = generateOTP();
+    if (deliveryType === "delivery" && !deliveryInfo) {
+      return res.status(400).json({
+        success: false,
+        message: "Delivery info required",
+      });
+    }
+
+    // ✅ SAFE TOTAL
+    const totalAmount = products.reduce((sum, p) => {
+      const price =
+        p.productId?.discountPrice ||
+        p.discountPrice ||
+        p.price ||
+        0;
+
+      return sum + price * p.quantity;
+    }, 0);
 
     const order = await OrderModel.create({
       userId,
+
       products: products.map((p) => ({
-        productId: p.productId._id,
-        name: p.productId.name,
+        productId: p.productId?._id || p.productId,
+        name: p.productId?.name || p.name,
         quantity: p.quantity,
-        price: p.productId.discountPrice,
-        createdBy: p.productId.user,
+        price: p.productId?.discountPrice || p.price,
+        createdBy: p.productId?.user || null,
       })),
+
       amount: totalAmount,
       status: "pending",
-      deliveryType,
       paymentMethod: "cod",
-      otp,
+
+      deliveryType,
+      deliveryInfo: deliveryType === "delivery" ? deliveryInfo : null,
+
+      otp: null,
       otpVerified: false,
-      deliveryStatus: "pending",
     });
 
-    // Send OTP via Email
-    const subject = "Your COD Order OTP Verification";
-    const text = `Your OTP for confirming the order is: ${otp}`;
-    const html = `<p>Your OTP for confirming the order is: <strong>${otp}</strong></p>`;
+    // ✅ SAFE CART CLEAR
+    await CartModal.deleteMany({
+      userId: new mongoose.Types.ObjectId(userId),
+    });
 
-    const mailSent = await sendMail({ to: email, text, html, subject });
-
-    if (!mailSent) {
-      console.log("⚠️ OTP email could not be sent");
-    }
-
-    res.status(200).json({
+    return res.status(201).json({
       success: true,
-      message: "OTP sent. Please verify to confirm order.",
+      message: "Order placed successfully",
       orderId: order._id,
     });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+  } catch (error) {
+    console.error("COD Order Error FULL:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to place COD order",
+    });
   }
 };
 
@@ -315,5 +383,6 @@ module.exports = {
   placeCODOrder,
   verifyCODOTP,
   getOrdersByEmail,
-  getOrdersByEmailfrontend
+  getOrdersByEmailfrontend,
+  getRiderOrders
 };

@@ -71,13 +71,19 @@ const orderSchema = new mongoose.Schema(
     paymentIntentId: { type: String },
 
     // ✅ Delivery Info
-    deliveryInfo: {
-      fullName: { type: String },
-      phone: { type: String },
-      address: { type: String },
-      city: { type: String },
-      postalCode: { type: String },
-    },
+   deliveryInfo: {
+  fullName: { type: String },
+  phone: { type: String },
+  address: { type: String },
+  city: { type: String },
+  postalCode: { type: String },
+
+  // ✅ MAP LOCATION
+  location: {
+    lat: { type: Number },
+    lng: { type: Number },
+  },
+},
 
     // ✅ New fields for order acceptance
     isAccepted: { type: Boolean, default: false },
