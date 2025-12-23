@@ -11,7 +11,7 @@ paymentRouter.get("/getorders", getAllOrders);
 paymentRouter.get("/ridersorder", getRiderOrders);
 paymentRouter.get("/singeorder/:id",getSingleOrders);
 paymentRouter.get("/singleorderbyemail/:email",getOrdersByEmail)
-paymentRouter.get("/singleorderbyemailfrontend/:email",getOrdersByEmailfrontend)
+paymentRouter.get("/singleorderbyemailfrontend/:id",getOrdersByEmailfrontend)
 paymentRouter.post("/cod", placeCODOrder);
 paymentRouter.post("/verify-otp", verifyCODOTP)
 

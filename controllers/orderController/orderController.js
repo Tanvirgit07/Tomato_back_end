@@ -198,19 +198,9 @@ const getOrdersByEmail = async (req, res, next) => {
 
 const getOrdersByEmailfrontend = async (req, res, next) => {
   try {
-    const { email } = req.params;
-console.log(email);
-    // Step 1: Find user by email
-    const user = await UserModel.findOne({ email });
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
+    const { id } = req.params;
     // Step 2: Find all orders for that user
-    const orders = await OrderModel.find({ userId: user._id })
+    const orders = await OrderModel.find({ userId: id })
       .populate("userId", "name email")
       .populate("products.productId", "name image discountPrice")
       .populate("products.createdBy", "name email role")
