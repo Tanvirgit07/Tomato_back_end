@@ -42,4 +42,6 @@ const getNewArrivals = async (req, res) => {
   }
 };
 
+
+
 module.exports = {bestSellingProduct,getNewArrivals}

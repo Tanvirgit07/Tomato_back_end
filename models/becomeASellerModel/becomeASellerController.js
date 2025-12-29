@@ -210,5 +210,31 @@ const deleteSeller = async (req, res, next) => {
   }
 };
 
+const getApprovedSellerById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
 
-module.exports = { becomeSellerController, getSellers, selllerStatusChange,deleteSeller };
+    const seller = await SellerModel.findOne({
+      _id: id,
+      status: "approved",
+    });
+
+    if (!seller) {
+      return res.status(404).json({
+        success: false,
+        message: "Approved seller not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: seller,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
+module.exports = { becomeSellerController, getSellers, selllerStatusChange,deleteSeller,getApprovedSellerById };
